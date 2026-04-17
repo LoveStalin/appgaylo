@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "961594841209",
+    "project_id": "truyen-huyen",
+    "storage_bucket": "truyen-huyen.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:961594841209:android:31cbcacd53406b9fd91ca8",
+        "android_client_info": {
+          "package_name": "com.example.truyen_huyen_thoai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCOC4dZDUJleLIXekDlbG31G1p7yyFZv7k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
