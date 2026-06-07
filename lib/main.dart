@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -178,12 +179,70 @@ class _AccountScreenState extends State<AccountScreen> {
   final TextEditingController _passwordController = TextEditingController();
   bool _loading = false;
   File? _avatarImage;
+  String? _bio;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfileData();
+  }
+
+  Future<void> _editBio() async {
+    final controller = TextEditingController(text: _bio ?? '');
+    if (!mounted) return;
+    final res = await showDialog<String?>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Chỉnh sửa Bio'),
+        content: TextField(
+          controller: controller,
+          maxLines: 3,
+          decoration: const InputDecoration(hintText: 'Viết điều gì đó về bạn'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(null),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
+            child: const Text('Lưu'),
+          ),
+        ],
+      ),
+    );
+
+    if (res != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('bio', res);
+      if (!mounted) return;
+      setState(() => _bio = res);
+      await _showMessage('Bio đã được cập nhật');
+    }
+  }
+
+  Future<void> _loadProfileData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final bio = prefs.getString('bio');
+      final avatarPath = prefs.getString('avatar_path');
+      File? avatar;
+      if (avatarPath != null && avatarPath.isNotEmpty) {
+        final f = File(avatarPath);
+        if (await f.exists()) avatar = f;
+      }
+      setState(() {
+        _bio = bio;
+        _avatarImage = avatar;
+      });
+    } catch (_) {}
   }
 
   Future<void> _showMessage(String message) async {
@@ -500,10 +559,41 @@ class _AccountScreenState extends State<AccountScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
-              Text(
-                'Chào mừng trở lại!',
-                style: TextStyle(color: Colors.grey[700]),
-              ),
+              if ((_bio ?? '').isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _bio!,
+                          style: TextStyle(color: Colors.grey[700]),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: _editBio,
+                        icon: const Icon(Icons.edit, size: 18),
+                        tooltip: 'Chỉnh sửa bio',
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Chào mừng trở lại!',
+                      style: TextStyle(color: Colors.grey[700]),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: _editBio,
+                      icon: const Icon(Icons.add, size: 18),
+                      tooltip: 'Thêm bio',
+                    ),
+                  ],
+                ),
               const SizedBox(height: 20),
               ElevatedButton.icon(
                 onPressed: _pickAvatar,
@@ -552,9 +642,13 @@ class _AccountScreenState extends State<AccountScreen> {
         imageQuality: 80,
       );
       if (file != null) {
-        setState(() {
-          _avatarImage = File(file.path);
-        });
+        final picked = File(file.path);
+        setState(() => _avatarImage = picked);
+        // persist avatar path locally
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('avatar_path', picked.path);
+        } catch (_) {}
       }
     } catch (e) {
       await _showMessage('Không thể chọn ảnh: ${e.toString()}');
