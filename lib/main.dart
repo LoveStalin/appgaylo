@@ -14,14 +14,67 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  // Public helper to change the app theme without exposing private state type
+  static void setAppTheme(BuildContext context, ThemeMode mode) {
+    context.findAncestorStateOfType<_MyAppState>()?.setThemeMode(mode);
+  }
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  ThemeMode _themeMode = ThemeMode.light;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTheme();
+  }
+
+  Future<void> _loadTheme() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final t = prefs.getString('theme_mode') ?? 'light';
+      setState(() {
+        _themeMode = t == 'dark' ? ThemeMode.dark : ThemeMode.light;
+      });
+    } catch (_) {}
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        'theme_mode',
+        mode == ThemeMode.dark ? 'dark' : 'light',
+      );
+    } catch (_) {}
+    if (!mounted) return;
+    setState(() => _themeMode = mode);
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: "Truyện Huyền Thoại",
+      theme: ThemeData(
+        brightness: Brightness.light,
+        primarySwatch: Colors.pink,
+        scaffoldBackgroundColor: Colors.white,
+        appBarTheme: AppBarTheme(backgroundColor: Colors.pink[100]),
+      ),
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        primarySwatch: Colors.pink,
+        scaffoldBackgroundColor: Colors.grey[900],
+        appBarTheme: AppBarTheme(backgroundColor: Colors.grey[850]),
+      ),
+      themeMode: _themeMode,
       home: const HomePage(),
     );
   }
@@ -332,12 +385,18 @@ class _AccountScreenState extends State<AccountScreen> {
           return _buildProfile(user);
         }
 
+        final isDark = Theme.of(context).brightness == Brightness.dark;
         return Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Colors.pink.shade50, Colors.pink.shade200],
+              colors: isDark
+                  ? [
+                      Color.fromRGBO(28, 28, 30, 1),
+                      Color.fromRGBO(44, 44, 46, 1),
+                    ]
+                  : [Colors.pink.shade50, Colors.pink.shade200],
             ),
           ),
           child: SafeArea(
@@ -519,118 +578,146 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Widget _buildProfile(User user) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Colors.pink.shade50, Colors.pink.shade200],
-        ),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 20),
-              GestureDetector(
-                onTap: _pickAvatar,
-                child: CircleAvatar(
-                  radius: 56,
-                  backgroundColor: Colors.white,
-                  backgroundImage: _avatarImage != null
-                      ? FileImage(_avatarImage!) as ImageProvider
-                      : (user.photoURL != null
-                            ? NetworkImage(user.photoURL!)
-                            : null),
-                  child: _avatarImage == null && user.photoURL == null
-                      ? const Icon(Icons.person, size: 56, color: Colors.pink)
-                      : null,
-                ),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: isDark
+                    ? [
+                        Color.fromRGBO(28, 28, 30, 1),
+                        Color.fromRGBO(44, 44, 46, 1),
+                      ]
+                    : [Colors.pink.shade50, Colors.pink.shade200],
               ),
-              const SizedBox(height: 12),
-              Text(
-                user.displayName ?? user.email ?? 'Người dùng',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              if ((_bio ?? '').isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          _bio!,
-                          style: TextStyle(color: Colors.grey[700]),
+            ),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 20),
+                    GestureDetector(
+                      onTap: _pickAvatar,
+                      child: CircleAvatar(
+                        radius: 56,
+                        backgroundColor: Colors.white,
+                        backgroundImage: _avatarImage != null
+                            ? FileImage(_avatarImage!) as ImageProvider
+                            : (user.photoURL != null
+                                  ? NetworkImage(user.photoURL!)
+                                  : null),
+                        child: _avatarImage == null && user.photoURL == null
+                            ? const Icon(
+                                Icons.person,
+                                size: 56,
+                                color: Colors.pink,
+                              )
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      user.displayName ?? user.email ?? 'Người dùng',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    if ((_bio ?? '').isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                _bio!,
+                                style: TextStyle(color: Colors.grey[700]),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: _editBio,
+                              icon: const Icon(Icons.edit, size: 18),
+                              tooltip: 'Chỉnh sửa bio',
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Chào mừng trở lại!',
+                            style: TextStyle(color: Colors.grey[700]),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            onPressed: _editBio,
+                            icon: const Icon(Icons.add, size: 18),
+                            tooltip: 'Thêm bio',
+                          ),
+                        ],
+                      ),
+                    const SizedBox(height: 20),
+                    ElevatedButton.icon(
+                      onPressed: _pickAvatar,
+                      icon: const Icon(Icons.photo_camera),
+                      label: const Text('Thêm/Thay avatar'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.pink,
+                        minimumSize: const Size(double.infinity, 48),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      IconButton(
-                        onPressed: _editBio,
-                        icon: const Icon(Icons.edit, size: 18),
-                        tooltip: 'Chỉnh sửa bio',
-                      ),
-                    ],
-                  ),
-                )
-              else
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Chào mừng trở lại!',
-                      style: TextStyle(color: Colors.grey[700]),
                     ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      onPressed: _editBio,
-                      icon: const Icon(Icons.add, size: 18),
-                      tooltip: 'Thêm bio',
-                    ),
+                    const SizedBox(height: 12),
                   ],
                 ),
-              const SizedBox(height: 20),
-              ElevatedButton.icon(
-                onPressed: _pickAvatar,
-                icon: const Icon(Icons.photo_camera),
-                label: const Text('Thêm/Thay avatar'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.pink,
-                  minimumSize: const Size(double.infinity, 48),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
               ),
-              const SizedBox(height: 12),
-              ElevatedButton.icon(
-                onPressed: () async {
-                  await FirebaseAuth.instance.signOut();
-                  try {
-                    await GoogleSignIn().signOut();
-                  } catch (_) {}
-                  setState(() => _avatarImage = null);
-                },
-                icon: const Icon(Icons.logout),
-                label: const Text('Đăng xuất'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey.shade300,
-                  foregroundColor: Colors.black,
-                  minimumSize: const Size(double.infinity, 48),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
-      ),
+
+        // Settings icon top-left
+        Positioned(
+          top: 8,
+          right: 8,
+          child: SafeArea(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(24),
+                onTap: _openSettings,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Color.fromRGBO(30, 30, 30, 0.6)
+                          : Color.fromRGBO(255, 255, 255, 0.85),
+                      shape: BoxShape.circle,
+                    ),
+                    padding: const EdgeInsets.all(6),
+                    child: Icon(
+                      Icons.settings,
+                      color: isDark ? Colors.white70 : Colors.black87,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -653,5 +740,121 @@ class _AccountScreenState extends State<AccountScreen> {
     } catch (e) {
       await _showMessage('Không thể chọn ảnh: ${e.toString()}');
     }
+  }
+
+  void _openSettings() {
+    if (!mounted) return;
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.palette),
+                title: const Text('Giao diện'),
+                onTap: () {
+                  Navigator.of(ctx).pop();
+                  // show theme chooser
+                  if (!mounted) return;
+                  showDialog(
+                    context: context,
+                    builder: (dctx) {
+                      return AlertDialog(
+                        title: const Text('Chọn giao diện'),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ListTile(
+                              leading: const Icon(Icons.wb_sunny),
+                              title: const Text('Sáng'),
+                              onTap: () {
+                                MyApp.setAppTheme(context, ThemeMode.light);
+                                Navigator.of(dctx).pop();
+                              },
+                            ),
+                            ListTile(
+                              leading: const Icon(Icons.nights_stay),
+                              title: const Text('Tối'),
+                              onTap: () {
+                                MyApp.setAppTheme(context, ThemeMode.dark);
+                                Navigator.of(dctx).pop();
+                              },
+                            ),
+                          ],
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(dctx).pop(),
+                            child: const Text('Hủy'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.language),
+                title: const Text('Ngôn ngữ'),
+                onTap: () {
+                  Navigator.of(ctx).pop();
+                  _showMessage('Chức năng Ngôn ngữ (tạm)');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.person),
+                title: const Text('Tài khoản'),
+                onTap: () {
+                  Navigator.of(ctx).pop();
+                  _showMessage('Chức năng Tài khoản (tạm)');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.lock),
+                title: const Text('Bảo mật'),
+                onTap: () {
+                  Navigator.of(ctx).pop();
+                  _showMessage('Chức năng Bảo mật (tạm)');
+                },
+              ),
+              const Divider(),
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: ListTile(
+                  tileColor: Colors.redAccent,
+                  leading: const Icon(Icons.logout, color: Colors.white),
+                  title: const Text(
+                    'Đăng xuất',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  onTap: () async {
+                    Navigator.of(ctx).pop();
+                    await FirebaseAuth.instance.signOut();
+                    try {
+                      await GoogleSignIn().signOut();
+                    } catch (_) {}
+                    try {
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.remove('avatar_path');
+                      await prefs.remove('bio');
+                    } catch (_) {}
+                    setState(() {
+                      _avatarImage = null;
+                      _bio = null;
+                    });
+                    _showMessage('Đã đăng xuất');
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
