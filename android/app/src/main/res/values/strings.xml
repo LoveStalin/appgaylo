@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App name -->
+    <string name="app_name">truyen_huyen_thoai</string>
+
+    <!-- Facebook SDK placeholders - REPLACE these with your actual values -->
+    <!-- facebook_app_id: Your Facebook App ID (numbers only) -->
+    <string name="facebook_app_id">795235683555095</string>
+    <!-- fb_login_protocol_scheme: usually fb{APP_ID} e.g. fb123456789 -->
+    <string name="fb_login_protocol_scheme">fb795235683555095</string>
+    <!-- facebook_client_token: (optional) your Facebook client token if used -->
+    <string name="facebook_client_token">448871bfabdf34b0ff4d51384e3299b7</string>
+</resources>

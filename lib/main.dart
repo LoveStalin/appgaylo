@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -328,6 +329,30 @@ class _AccountScreenState extends State<AccountScreen> {
     }
   }
 
+  Future<void> _signInWithFacebook() async {
+    try {
+      setState(() => _loading = true);
+      final LoginResult result = await FacebookAuth.instance.login(
+        permissions: ['email', 'public_profile'],
+      );
+
+      if (result.status == LoginStatus.success && result.accessToken != null) {
+        final accessToken = result.accessToken!;
+        final credential = FacebookAuthProvider.credential(accessToken.token);
+        await FirebaseAuth.instance.signInWithCredential(credential);
+        await _showMessage('Đăng nhập thành công với Facebook');
+      } else if (result.status == LoginStatus.cancelled) {
+        await _showMessage('Đã hủy đăng nhập Facebook');
+      } else {
+        await _showMessage('Lỗi đăng nhập Facebook');
+      }
+    } catch (e) {
+      await _showMessage('Lỗi: ${e.toString()}');
+    } finally {
+      setState(() => _loading = false);
+    }
+  }
+
   Future<void> _signInWithEmail() async {
     try {
       setState(() => _loading = true);
@@ -459,7 +484,7 @@ class _AccountScreenState extends State<AccountScreen> {
                           const SizedBox(height: 12),
 
                           ElevatedButton.icon(
-                            onPressed: () {},
+                            onPressed: _signInWithFacebook,
                             icon: const Icon(
                               Icons.facebook,
                               color: Colors.white,
@@ -833,7 +858,29 @@ class _AccountScreenState extends State<AccountScreen> {
                     style: TextStyle(color: Colors.white),
                   ),
                   onTap: () async {
-                    Navigator.of(ctx).pop();
+                    // ask for confirmation before logging out
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (dctx) => AlertDialog(
+                        title: const Text('Xác nhận'),
+                        content: const Text('Bạn chắc chưa?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(dctx).pop(false),
+                            child: const Text('Thôi nghĩ lại rồi'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(dctx).pop(true),
+                            child: const Text('Tôi chắc choắn'),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirm != true) return;
+
+                    if (!mounted) return;
+                    Navigator.of(context).pop();
                     await FirebaseAuth.instance.signOut();
                     try {
                       await GoogleSignIn().signOut();
@@ -843,6 +890,7 @@ class _AccountScreenState extends State<AccountScreen> {
                       await prefs.remove('avatar_path');
                       await prefs.remove('bio');
                     } catch (_) {}
+                    if (!mounted) return;
                     setState(() {
                       _avatarImage = null;
                       _bio = null;

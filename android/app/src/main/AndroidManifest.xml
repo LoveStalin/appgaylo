@@ -1,7 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required permission for network access used by Facebook SDK -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:label="truyen_huyen_thoai"
-        android:name="${applicationName}"
+        android:name=".MyApplication"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
@@ -25,6 +27,24 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Facebook SDK required meta-data -->
+        <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebook_app_id" />
+        <meta-data android:name="com.facebook.sdk.ClientToken" android:value="@string/facebook_client_token" />
+
+        <!-- Activities required by Facebook SDK -->
+        <activity android:name="com.facebook.FacebookActivity"
+                  android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
+                  android:label="@string/app_name" />
+
+        <activity android:name="com.facebook.CustomTabActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="@string/fb_login_protocol_scheme" />
+            </intent-filter>
+        </activity>
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
@@ -37,6 +57,21 @@
 
          In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
     <queries>
+        <!-- Allow the app to detect Facebook native apps on Android 11+ so the
+             Facebook SDK can call into them when available. This follows the
+             package-visibility requirements introduced in API 30.
+             Add more Facebook package names here if you need to support them. -->
+        <package android:name="com.facebook.katana" />
+        <package android:name="com.facebook.lite" />
+        <package android:name="com.facebook.orca" />
+
+        <!-- Also allow matching intents using the fb login protocol scheme -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="@string/fb_login_protocol_scheme" />
+        </intent>
+
+        <!-- Existing queries used by Flutter engine for PROCESS_TEXT -->
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
