@@ -23,17 +23,29 @@ class MyApp extends StatefulWidget {
     context.findAncestorStateOfType<_MyAppState>()?.setThemeMode(mode);
   }
 
+  // Public helper to change app language
+  static void setAppLanguage(BuildContext context, String lang) {
+    context.findAncestorStateOfType<_MyAppState>()?.setLanguage(lang);
+  }
+
+  // Public helper to get current language
+  static String getAppLanguage(BuildContext context) {
+    return context.findAncestorStateOfType<_MyAppState>()?.lang ?? 'vi';
+  }
+
   @override
   State<MyApp> createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
   ThemeMode _themeMode = ThemeMode.light;
+  String _lang = 'vi'; // default Vietnamese
 
   @override
   void initState() {
     super.initState();
     _loadTheme();
+    _loadLanguage();
   }
 
   Future<void> _loadTheme() async {
@@ -43,6 +55,14 @@ class _MyAppState extends State<MyApp> {
       setState(() {
         _themeMode = t == 'dark' ? ThemeMode.dark : ThemeMode.light;
       });
+    } catch (_) {}
+  }
+
+  Future<void> _loadLanguage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final l = prefs.getString('app_lang') ?? 'vi';
+      setState(() => _lang = l);
     } catch (_) {}
   }
 
@@ -56,6 +76,18 @@ class _MyAppState extends State<MyApp> {
     } catch (_) {}
     if (!mounted) return;
     setState(() => _themeMode = mode);
+  }
+
+  // expose current language
+  String get lang => _lang;
+
+  Future<void> setLanguage(String lang) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('app_lang', lang);
+    } catch (_) {}
+    if (!mounted) return;
+    setState(() => _lang = lang);
   }
 
   @override
@@ -81,6 +113,94 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
+// Simple in-file localization map for two languages.
+const Map<String, Map<String, String>> _localized = {
+  'vi': {
+    'app_title': 'Truyện Huyền Thoại',
+    'home': 'Trang chủ',
+    'library': 'Thư viện',
+    'write': 'Viết truyện',
+    'account': 'Tài khoản',
+    'search_hint': 'Tìm truyện...',
+    'featured': '🔥 Truyện nổi bật',
+    'new': '📚 Truyện mới',
+    'welcome_title': 'Chào mừng đến Truyện Huyền Thoại',
+    'welcome_sub': 'Đăng nhập để tiếp tục trải nghiệm những câu chuyện thú vị',
+    'sign_in_google': 'Đăng nhập với Google',
+    'sign_in_facebook': 'Đăng nhập với Facebook',
+    'sign_in_apple': 'Đăng nhập với Apple',
+    'sign_up': 'Đăng ký tài khoản Huyền Thoại',
+    'or_use_email': 'Hoặc sử dụng email của bạn',
+    'email': 'Email',
+    'password': 'Mật khẩu',
+    'sign_in': 'Đăng nhập',
+    'forgot_password': 'Quên mật khẩu hả?',
+    'add_avatar': 'Thêm/Thay avatar',
+    'settings': 'Cài đặt',
+    'appearance': 'Giao diện',
+    'language': 'Ngôn ngữ',
+    'account_setting': 'Tài khoản',
+    'security': 'Bảo mật',
+    'logout': 'Đăng xuất',
+    'logout_confirm_title': 'Xác nhận',
+    'logout_confirm_body': 'Bạn có chắc muốn đăng xuất không?',
+    'choose_appearance': 'Chọn giao diện',
+    'light': 'Sáng',
+    'dark': 'Tối',
+    'cancel': 'Hủy',
+    'confirm': 'Đăng xuất',
+    'edit_bio': 'Chỉnh sửa Bio',
+    'save': 'Lưu',
+    'add_bio': 'Thêm bio',
+    'welcome_back': 'Chào mừng trở lại!',
+  },
+  'en': {
+    'app_title': 'Legend Stories',
+    'home': 'Home',
+    'library': 'Library',
+    'write': 'Write',
+    'account': 'Account',
+    'search_hint': 'Search stories...',
+    'featured': '🔥 Featured',
+    'new': '📚 New',
+    'welcome_title': 'Welcome to Legend Stories',
+    'welcome_sub': 'Sign in to continue enjoying great stories',
+    'sign_in_google': 'Sign in with Google',
+    'sign_in_facebook': 'Sign in with Facebook',
+    'sign_in_apple': 'Sign in with Apple',
+    'sign_up': 'Sign up for Legend',
+    'or_use_email': 'Or use your email',
+    'email': 'Email',
+    'password': 'Password',
+    'sign_in': 'Sign in',
+    'forgot_password': 'Forgot password?',
+    'add_avatar': 'Add/Change avatar',
+    'settings': 'Settings',
+    'appearance': 'Appearance',
+    'language': 'Language',
+    'account_setting': 'Account',
+    'security': 'Security',
+    'logout': 'Log out',
+    'logout_confirm_title': 'Confirm',
+    'logout_confirm_body': 'Are you sure you want to sign out?',
+    'choose_appearance': 'Choose appearance',
+    'light': 'Light',
+    'dark': 'Dark',
+    'cancel': 'Cancel',
+    'confirm': 'Sign out',
+    'edit_bio': 'Edit Bio',
+    'save': 'Save',
+    'add_bio': 'Add bio',
+    'welcome_back': 'Welcome back!',
+  },
+};
+
+String L(BuildContext context, String key) {
+  final state = context.findAncestorStateOfType<_MyAppState>();
+  final lang = state?.lang ?? 'vi';
+  return _localized[lang]?[key] ?? key;
+}
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -102,7 +222,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Truyện Huyền Thoại"),
+        title: Text(L(context, 'app_title')),
         centerTitle: true,
         backgroundColor: Colors.pink[100], // hồng pastel
       ),
@@ -123,17 +243,26 @@ class _HomePageState extends State<HomePage> {
         selectedItemColor: Colors.pink,
         unselectedItemColor: Colors.grey,
 
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Trang chủ"),
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: L(context, 'home'),
+          ),
 
-          BottomNavigationBarItem(icon: Icon(Icons.book), label: "Thư viện"),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.book),
+            label: L(context, 'library'),
+          ),
 
           BottomNavigationBarItem(
             icon: Icon(Icons.create),
-            label: "Viết truyện",
+            label: L(context, 'write'),
           ),
 
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Tài khoản"),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: L(context, 'account'),
+          ),
         ],
       ),
     );
@@ -151,7 +280,7 @@ class HomeScreen extends StatelessWidget {
         // thanh tìm kiếm
         TextField(
           decoration: InputDecoration(
-            hintText: "Tìm truyện...",
+            hintText: L(context, 'search_hint'),
             prefixIcon: Icon(Icons.search),
             filled: true,
             fillColor: Colors.pink[50],
@@ -164,8 +293,8 @@ class HomeScreen extends StatelessWidget {
 
         const SizedBox(height: 20),
 
-        const Text(
-          "🔥 Truyện nổi bật",
+        Text(
+          L(context, 'featured'),
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
 
@@ -178,8 +307,8 @@ class HomeScreen extends StatelessWidget {
 
         const SizedBox(height: 20),
 
-        const Text(
-          "📚 Truyện mới",
+        Text(
+          L(context, 'new'),
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
 
@@ -432,7 +561,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 children: [
                   const SizedBox(height: 20),
 
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 48,
                     backgroundColor: Colors.white,
                     child: Icon(Icons.person, size: 48, color: Colors.pink),
@@ -440,8 +569,8 @@ class _AccountScreenState extends State<AccountScreen> {
 
                   const SizedBox(height: 14),
 
-                  const Text(
-                    'Chào mừng đến Truyện Huyền Thoại',
+                  Text(
+                    L(context, 'welcome_title'),
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
@@ -449,7 +578,7 @@ class _AccountScreenState extends State<AccountScreen> {
                   const SizedBox(height: 8),
 
                   Text(
-                    'Đăng nhập để tiếp tục trải nghiệm những câu chuyện thú vị',
+                    L(context, 'welcome_sub'),
                     style: TextStyle(color: Colors.grey[700]),
                     textAlign: TextAlign.center,
                   ),
@@ -471,7 +600,7 @@ class _AccountScreenState extends State<AccountScreen> {
                               Icons.g_mobiledata,
                               color: Colors.white,
                             ),
-                            label: const Text('Đăng nhập với Google'),
+                            label: Text(L(context, 'sign_in_google')),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.redAccent,
                               minimumSize: const Size(double.infinity, 48),
@@ -489,7 +618,7 @@ class _AccountScreenState extends State<AccountScreen> {
                               Icons.facebook,
                               color: Colors.white,
                             ),
-                            label: const Text('Đăng nhập với Facebook'),
+                            label: Text(L(context, 'sign_in_facebook')),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.blueAccent.shade700,
                               minimumSize: const Size(double.infinity, 48),
@@ -504,7 +633,7 @@ class _AccountScreenState extends State<AccountScreen> {
                           ElevatedButton.icon(
                             onPressed: () {},
                             icon: const Icon(Icons.apple, color: Colors.white),
-                            label: const Text('Đăng nhập với Apple'),
+                            label: Text(L(context, 'sign_in_apple')),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.black,
                               minimumSize: const Size(double.infinity, 48),
@@ -518,7 +647,7 @@ class _AccountScreenState extends State<AccountScreen> {
 
                           TextButton(
                             onPressed: _signUpWithEmail,
-                            child: const Text('Đăng ký tài khoản Huyền Thoại'),
+                            child: Text(L(context, 'sign_up')),
                           ),
                         ],
                       ),
@@ -527,8 +656,8 @@ class _AccountScreenState extends State<AccountScreen> {
 
                   const SizedBox(height: 20),
 
-                  const Text(
-                    'Hoặc sử dụng email của bạn',
+                  Text(
+                    L(context, 'or_use_email'),
                     style: TextStyle(color: Colors.black54),
                   ),
 
@@ -537,8 +666,8 @@ class _AccountScreenState extends State<AccountScreen> {
                   TextField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      hintText: 'Email',
+                    decoration: InputDecoration(
+                      hintText: L(context, 'email'),
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
@@ -553,8 +682,8 @@ class _AccountScreenState extends State<AccountScreen> {
                   TextField(
                     controller: _passwordController,
                     obscureText: true,
-                    decoration: const InputDecoration(
-                      hintText: 'Mật khẩu',
+                    decoration: InputDecoration(
+                      hintText: L(context, 'password'),
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
@@ -584,14 +713,14 @@ class _AccountScreenState extends State<AccountScreen> {
                               strokeWidth: 2,
                             ),
                           )
-                        : const Text('Đăng nhập'),
+                        : Text(L(context, 'sign_in')),
                   ),
 
                   const SizedBox(height: 24),
 
                   TextButton(
                     onPressed: _sendPasswordReset,
-                    child: const Text('Quên mật khẩu hả?'),
+                    child: Text(L(context, 'forgot_password')),
                   ),
                 ],
               ),
@@ -781,7 +910,7 @@ class _AccountScreenState extends State<AccountScreen> {
             children: [
               ListTile(
                 leading: const Icon(Icons.palette),
-                title: const Text('Giao diện'),
+                title: Text(L(context, 'appearance')),
                 onTap: () {
                   Navigator.of(ctx).pop();
                   // show theme chooser
@@ -790,13 +919,13 @@ class _AccountScreenState extends State<AccountScreen> {
                     context: context,
                     builder: (dctx) {
                       return AlertDialog(
-                        title: const Text('Chọn giao diện'),
+                        title: Text(L(context, 'choose_appearance')),
                         content: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             ListTile(
                               leading: const Icon(Icons.wb_sunny),
-                              title: const Text('Sáng'),
+                              title: Text(L(context, 'light')),
                               onTap: () {
                                 MyApp.setAppTheme(context, ThemeMode.light);
                                 Navigator.of(dctx).pop();
@@ -804,7 +933,7 @@ class _AccountScreenState extends State<AccountScreen> {
                             ),
                             ListTile(
                               leading: const Icon(Icons.nights_stay),
-                              title: const Text('Tối'),
+                              title: Text(L(context, 'dark')),
                               onTap: () {
                                 MyApp.setAppTheme(context, ThemeMode.dark);
                                 Navigator.of(dctx).pop();
@@ -815,7 +944,7 @@ class _AccountScreenState extends State<AccountScreen> {
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.of(dctx).pop(),
-                            child: const Text('Hủy'),
+                            child: Text(L(context, 'cancel')),
                           ),
                         ],
                       );
@@ -825,15 +954,70 @@ class _AccountScreenState extends State<AccountScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.language),
-                title: const Text('Ngôn ngữ'),
+                title: Text(L(context, 'language')),
                 onTap: () {
                   Navigator.of(ctx).pop();
-                  _showMessage('Chức năng Ngôn ngữ (tạm)');
+                  if (!mounted) return;
+                  final current = MyApp.getAppLanguage(context);
+                  showDialog(
+                    context: context,
+                    builder: (dctx) {
+                      String selected = current;
+                      return StatefulBuilder(
+                        builder: (dctx, setStateDialog) {
+                          return AlertDialog(
+                            title: Text(L(context, 'language')),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ListTile(
+                                  title: const Text('Tiếng Việt'),
+                                  trailing: selected == 'vi'
+                                      ? const Icon(
+                                          Icons.check,
+                                          color: Colors.green,
+                                        )
+                                      : const SizedBox.shrink(),
+                                  onTap: () =>
+                                      setStateDialog(() => selected = 'vi'),
+                                ),
+                                ListTile(
+                                  title: const Text('English'),
+                                  trailing: selected == 'en'
+                                      ? const Icon(
+                                          Icons.check,
+                                          color: Colors.green,
+                                        )
+                                      : const SizedBox.shrink(),
+                                  onTap: () =>
+                                      setStateDialog(() => selected = 'en'),
+                                ),
+                              ],
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(dctx).pop(),
+                                child: Text(L(context, 'cancel')),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  MyApp.setAppLanguage(context, selected);
+                                  Navigator.of(dctx).pop();
+                                  _showMessage('Ngôn ngữ đã được cập nhật');
+                                },
+                                child: Text(L(context, 'save')),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  );
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.person),
-                title: const Text('Tài khoản'),
+                title: Text(L(context, 'account_setting')),
                 onTap: () {
                   Navigator.of(ctx).pop();
                   _showMessage('Chức năng Tài khoản (tạm)');
@@ -841,7 +1025,7 @@ class _AccountScreenState extends State<AccountScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.lock),
-                title: const Text('Bảo mật'),
+                title: Text(L(context, 'security')),
                 onTap: () {
                   Navigator.of(ctx).pop();
                   _showMessage('Chức năng Bảo mật (tạm)');
@@ -853,25 +1037,25 @@ class _AccountScreenState extends State<AccountScreen> {
                 child: ListTile(
                   tileColor: Colors.redAccent,
                   leading: const Icon(Icons.logout, color: Colors.white),
-                  title: const Text(
-                    'Đăng xuất',
-                    style: TextStyle(color: Colors.white),
+                  title: Text(
+                    L(context, 'logout'),
+                    style: const TextStyle(color: Colors.white),
                   ),
                   onTap: () async {
                     // ask for confirmation before logging out
                     final confirm = await showDialog<bool>(
                       context: context,
                       builder: (dctx) => AlertDialog(
-                        title: const Text('Xác nhận'),
-                        content: const Text('Bạn chắc chưa?'),
+                        title: Text(L(context, 'logout_confirm_title')),
+                        content: Text(L(context, 'logout_confirm_body')),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.of(dctx).pop(false),
-                            child: const Text('Thôi nghĩ lại rồi'),
+                            child: Text(L(context, 'cancel')),
                           ),
                           TextButton(
                             onPressed: () => Navigator.of(dctx).pop(true),
-                            child: const Text('Tôi chắc choắn'),
+                            child: Text(L(context, 'confirm')),
                           ),
                         ],
                       ),
@@ -895,7 +1079,7 @@ class _AccountScreenState extends State<AccountScreen> {
                       _avatarImage = null;
                       _bio = null;
                     });
-                    _showMessage('Đã đăng xuất');
+                    _showMessage(L(context, 'logout'));
                   },
                 ),
               ),
