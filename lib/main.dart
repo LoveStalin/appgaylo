@@ -160,7 +160,7 @@ const Map<String, Map<String, String>> _localized = {
     'library': 'Library',
     'write': 'Write',
     'account': 'Account',
-    'search_hint': 'Search stories...',
+    'search_hint': 'Search',
     'featured': '🔥 Featured',
     'new': '📚 New',
     'welcome_title': 'Welcome to Legend Stories',
