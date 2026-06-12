@@ -363,6 +363,8 @@ class _AccountScreenState extends State<AccountScreen> {
   bool _loading = false;
   File? _avatarImage;
   String? _bio;
+  int _accountTabIndex = 0; // 0: my stories, 1: write, 2: liked
+  bool _showWriteButton = false;
 
   @override
   void dispose() {
@@ -749,94 +751,328 @@ class _AccountScreenState extends State<AccountScreen> {
                     : [Colors.pink.shade50, Colors.pink.shade200],
               ),
             ),
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 20),
-                    GestureDetector(
-                      onTap: _pickAvatar,
-                      child: CircleAvatar(
-                        radius: 56,
-                        backgroundColor: Colors.white,
-                        backgroundImage: _avatarImage != null
-                            ? FileImage(_avatarImage!) as ImageProvider
-                            : (user.photoURL != null
-                                  ? NetworkImage(user.photoURL!)
-                                  : null),
-                        child: _avatarImage == null && user.photoURL == null
-                            ? const Icon(
-                                Icons.person,
-                                size: 56,
-                                color: Colors.pink,
-                              )
-                            : null,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      user.displayName ?? user.email ?? 'Người dùng',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    if ((_bio ?? '').isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                        child: Row(
+            child: Column(
+              children: [
+                Expanded(
+                  child: SafeArea(
+                    bottom: false,
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Expanded(
-                              child: Text(
-                                _bio!,
-                                style: TextStyle(color: Colors.grey[700]),
+                            const SizedBox(height: 20),
+                            GestureDetector(
+                              onTap: _pickAvatar,
+                              child: CircleAvatar(
+                                radius: 56,
+                                backgroundColor: Colors.white,
+                                backgroundImage: _avatarImage != null
+                                    ? FileImage(_avatarImage!) as ImageProvider
+                                    : (user.photoURL != null
+                                          ? NetworkImage(user.photoURL!)
+                                          : null),
+                                child:
+                                    _avatarImage == null &&
+                                        user.photoURL == null
+                                    ? const Icon(
+                                        Icons.person,
+                                        size: 56,
+                                        color: Colors.pink,
+                                      )
+                                    : null,
                               ),
                             ),
-                            IconButton(
-                              onPressed: _editBio,
-                              icon: const Icon(Icons.edit, size: 18),
-                              tooltip: 'Chỉnh sửa bio',
+                            const SizedBox(height: 12),
+                            Text(
+                              user.displayName ?? user.email ?? 'Người dùng',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 8),
+                            if ((_bio ?? '').isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12.0,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        _bio!,
+                                        style: TextStyle(
+                                          color: Colors.grey[700],
+                                        ),
+                                      ),
+                                    ),
+                                    IconButton(
+                                      onPressed: _editBio,
+                                      icon: const Icon(Icons.edit, size: 18),
+                                      tooltip: 'Chỉnh sửa bio',
+                                    ),
+                                  ],
+                                ),
+                              )
+                            else
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Chào mừng trở lại!',
+                                    style: TextStyle(color: Colors.grey[700]),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  IconButton(
+                                    onPressed: _editBio,
+                                    icon: const Icon(Icons.add, size: 18),
+                                    tooltip: 'Thêm bio',
+                                  ),
+                                ],
+                              ),
+                            const SizedBox(height: 20),
+                            ElevatedButton.icon(
+                              onPressed: _pickAvatar,
+                              icon: const Icon(Icons.photo_camera),
+                              label: const Text('Thêm/Thay avatar'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.pink,
+                                minimumSize: const Size(double.infinity, 48),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // Middle navigation bar inside Account (under profile)
+                // Make it edge-to-edge (no horizontal margin) like TikTok
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 0,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Color.fromRGBO(20, 20, 20, 1)
+                        : Colors.white,
+                    // keep flat to edges
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      // My stories (custom 2x3 bars)
+                      InkWell(
+                        onTap: () => setState(() {
+                          _accountTabIndex = 0;
+                          _showWriteButton = false;
+                        }),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              width: 40,
+                              height: 28,
+                              child: Column(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: List.generate(3, (i) {
+                                      return Container(
+                                        width: 6,
+                                        height: 8,
+                                        decoration: BoxDecoration(
+                                          color: _accountTabIndex == 0
+                                              ? Colors.pink
+                                              : Colors.grey,
+                                          borderRadius: BorderRadius.circular(
+                                            2,
+                                          ),
+                                        ),
+                                      );
+                                    }),
+                                  ),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: List.generate(3, (i) {
+                                      return Container(
+                                        width: 6,
+                                        height: 8,
+                                        decoration: BoxDecoration(
+                                          color: _accountTabIndex == 0
+                                              ? Colors.pink
+                                              : Colors.grey,
+                                          borderRadius: BorderRadius.circular(
+                                            2,
+                                          ),
+                                        ),
+                                      );
+                                    }),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Container(
+                              height: 3,
+                              width: 24,
+                              decoration: BoxDecoration(
+                                color: _accountTabIndex == 0
+                                    ? (isDark ? Colors.white : Colors.black)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
                             ),
                           ],
                         ),
-                      )
-                    else
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      ),
+
+                      // Center pen icon (taps toggle showing the Try button below)
+                      InkWell(
+                        onTap: () => setState(() {
+                          _accountTabIndex = 1;
+                          _showWriteButton = !_showWriteButton;
+                        }),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.create,
+                              color: _accountTabIndex == 1
+                                  ? Colors.pink
+                                  : Colors.grey,
+                            ),
+                            const SizedBox(height: 6),
+                            Container(
+                              height: 3,
+                              width: 24,
+                              decoration: BoxDecoration(
+                                color: _accountTabIndex == 1
+                                    ? (isDark ? Colors.white : Colors.black)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Liked
+                      InkWell(
+                        onTap: () => setState(() {
+                          _accountTabIndex = 2;
+                          _showWriteButton = false;
+                        }),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.favorite_border,
+                              color: _accountTabIndex == 2
+                                  ? Colors.pink
+                                  : Colors.grey,
+                            ),
+                            const SizedBox(height: 6),
+                            Container(
+                              height: 3,
+                              width: 24,
+                              decoration: BoxDecoration(
+                                color: _accountTabIndex == 2
+                                    ? (isDark ? Colors.white : Colors.black)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Content area below the nav bar (changes per selected tab)
+                const SizedBox(height: 16),
+                // show different content per tab
+                if (_accountTabIndex == 0)
+                  SizedBox(
+                    height: 240,
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
+                          Icon(Icons.image, size: 56, color: Colors.grey),
+                          const SizedBox(height: 12),
                           Text(
-                            'Chào mừng trở lại!',
-                            style: TextStyle(color: Colors.grey[700]),
-                          ),
-                          const SizedBox(width: 8),
-                          IconButton(
-                            onPressed: _editBio,
-                            icon: const Icon(Icons.add, size: 18),
-                            tooltip: 'Thêm bio',
+                            'Bạn chưa viết truyện nào',
+                            style: TextStyle(color: Colors.grey[600]),
                           ),
                         ],
                       ),
-                    const SizedBox(height: 20),
-                    ElevatedButton.icon(
-                      onPressed: _pickAvatar,
-                      icon: const Icon(Icons.photo_camera),
-                      label: const Text('Thêm/Thay avatar'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.pink,
-                        minimumSize: const Size(double.infinity, 48),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                    ),
+                  )
+                else if (_accountTabIndex == 1)
+                  SizedBox(
+                    height: 240,
+                    child: Center(
+                      child: _showWriteButton
+                          ? ElevatedButton(
+                              onPressed: () {
+                                final homeState = context
+                                    .findAncestorStateOfType<_HomePageState>();
+                                if (homeState != null) {
+                                  homeState.setState(
+                                    () => homeState.currentIndex = 2,
+                                  );
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.pink,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 28,
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(24),
+                                ),
+                              ),
+                              child: const Text('Thử viết truyện'),
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                  )
+                else
+                  SizedBox(
+                    height: 240,
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.image, size: 56, color: Colors.grey),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Bạn chưa viết truyện nào',
+                            style: TextStyle(color: Colors.grey[600]),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 12),
-                  ],
-                ),
-              ),
+                  ),
+                const SizedBox(height: 16),
+              ],
             ),
           ),
         ),
