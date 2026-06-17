@@ -9,26 +9,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   await Firebase.initializeApp();
-
   runApp(const MyApp());
 }
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
-  // Public helper to change the app theme without exposing private state type
   static void setAppTheme(BuildContext context, ThemeMode mode) {
     context.findAncestorStateOfType<_MyAppState>()?.setThemeMode(mode);
   }
 
-  // Public helper to change app language
   static void setAppLanguage(BuildContext context, String lang) {
     context.findAncestorStateOfType<_MyAppState>()?.setLanguage(lang);
   }
 
-  // Public helper to get current language
   static String getAppLanguage(BuildContext context) {
     return context.findAncestorStateOfType<_MyAppState>()?.lang ?? 'vi';
   }
@@ -39,7 +34,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   ThemeMode _themeMode = ThemeMode.light;
-  String _lang = 'vi'; // default Vietnamese
+  String _lang = 'vi';
 
   @override
   void initState() {
@@ -78,7 +73,6 @@ class _MyAppState extends State<MyApp> {
     setState(() => _themeMode = mode);
   }
 
-  // expose current language
   String get lang => _lang;
 
   Future<void> setLanguage(String lang) async {
@@ -113,14 +107,13 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-// Simple in-file localization map for two languages.
 const Map<String, Map<String, String>> _localized = {
   'vi': {
     'app_title': 'Truyện Huyền Thoại',
     'home': 'Trang chủ',
     'library': 'Thư viện',
     'write': 'Viết truyện',
-    'account': 'Tài khoản',
+    'profile': 'Trang cá nhân',
     'search_hint': 'Tìm truyện...',
     'featured': '🔥 Truyện nổi bật',
     'new': '📚 Truyện mới',
@@ -151,7 +144,7 @@ const Map<String, Map<String, String>> _localized = {
     'confirm': 'Đăng xuất',
     'edit_bio': 'Chỉnh sửa Bio',
     'save': 'Lưu',
-    'add_bio': 'Thêm bio',
+    'add_bio': 'Thêm tiểu sử (Bio)',
     'welcome_back': 'Chào mừng trở lại!',
   },
   'en': {
@@ -159,7 +152,7 @@ const Map<String, Map<String, String>> _localized = {
     'home': 'Home',
     'library': 'Library',
     'write': 'Write',
-    'account': 'Account',
+    'profile': 'Profile',
     'search_hint': 'Search',
     'featured': '🔥 Featured',
     'new': '📚 New',
@@ -224,44 +217,35 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: Text(L(context, 'app_title')),
         centerTitle: true,
-        backgroundColor: Colors.pink[100], // hồng pastel
+        backgroundColor: Colors.pink[100],
       ),
-
       body: pages[currentIndex],
-
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: currentIndex,
-
         onTap: (index) {
           setState(() {
             currentIndex = index;
           });
         },
-
-        backgroundColor: Colors.pink[100], // hồng pastel
-
+        backgroundColor: Colors.pink[100],
         selectedItemColor: Colors.pink,
         unselectedItemColor: Colors.grey,
-
         items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: const Icon(Icons.home),
             label: L(context, 'home'),
           ),
-
           BottomNavigationBarItem(
-            icon: Icon(Icons.book),
+            icon: const Icon(Icons.book),
             label: L(context, 'library'),
           ),
-
           BottomNavigationBarItem(
-            icon: Icon(Icons.create),
+            icon: const Icon(Icons.create),
             label: L(context, 'write'),
           ),
-
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: L(context, 'account'),
+            icon: const Icon(Icons.person),
+            label: L(context, 'profile'),
           ),
         ],
       ),
@@ -277,11 +261,10 @@ class HomeScreen extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // thanh tìm kiếm
         TextField(
           decoration: InputDecoration(
             hintText: L(context, 'search_hint'),
-            prefixIcon: Icon(Icons.search),
+            prefixIcon: const Icon(Icons.search),
             filled: true,
             fillColor: Colors.pink[50],
             border: OutlineInputBorder(
@@ -290,30 +273,22 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
         ),
-
         const SizedBox(height: 20),
-
         Text(
           L(context, 'featured'),
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
-
         const SizedBox(height: 10),
-
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: const [StoryCard(), StoryCard(), StoryCard()],
         ),
-
         const SizedBox(height: 20),
-
         Text(
           L(context, 'new'),
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
-
         const SizedBox(height: 10),
-
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: const [StoryCard(), StoryCard(), StoryCard()],
@@ -339,17 +314,13 @@ class StoryCard extends StatelessWidget {
           ),
           child: const Icon(Icons.book, size: 40),
         ),
-
         const SizedBox(height: 5),
-
         const Text("Tên truyện", overflow: TextOverflow.ellipsis),
       ],
     );
   }
 }
 
-//Account Screen
-//Account Screen
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
 
@@ -363,7 +334,7 @@ class _AccountScreenState extends State<AccountScreen> {
   bool _loading = false;
   File? _avatarImage;
   String? _bio;
-  int _accountTabIndex = 0; // 0: my stories, 1: write, 2: liked
+  int _accountTabIndex = 0;
   bool _showWriteButton = false;
 
   @override
@@ -443,7 +414,7 @@ class _AccountScreenState extends State<AccountScreen> {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
       if (googleUser == null) {
         setState(() => _loading = false);
-        return; // user canceled
+        return;
       }
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
@@ -549,8 +520,8 @@ class _AccountScreenState extends State<AccountScreen> {
               end: Alignment.bottomCenter,
               colors: isDark
                   ? [
-                      Color.fromRGBO(28, 28, 30, 1),
-                      Color.fromRGBO(44, 44, 46, 1),
+                      const Color.fromRGBO(28, 28, 30, 1),
+                      const Color.fromRGBO(44, 44, 46, 1),
                     ]
                   : [Colors.pink.shade50, Colors.pink.shade200],
             ),
@@ -562,31 +533,27 @@ class _AccountScreenState extends State<AccountScreen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 20),
-
-                  CircleAvatar(
+                  const CircleAvatar(
                     radius: 48,
                     backgroundColor: Colors.white,
                     child: Icon(Icons.person, size: 48, color: Colors.pink),
                   ),
-
                   const SizedBox(height: 14),
-
                   Text(
                     L(context, 'welcome_title'),
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                     textAlign: TextAlign.center,
                   ),
-
                   const SizedBox(height: 8),
-
                   Text(
                     L(context, 'welcome_sub'),
                     style: TextStyle(color: Colors.grey[700]),
                     textAlign: TextAlign.center,
                   ),
-
                   const SizedBox(height: 24),
-
                   Card(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -611,9 +578,7 @@ class _AccountScreenState extends State<AccountScreen> {
                               ),
                             ),
                           ),
-
                           const SizedBox(height: 12),
-
                           ElevatedButton.icon(
                             onPressed: _signInWithFacebook,
                             icon: const Icon(
@@ -629,9 +594,7 @@ class _AccountScreenState extends State<AccountScreen> {
                               ),
                             ),
                           ),
-
                           const SizedBox(height: 12),
-
                           ElevatedButton.icon(
                             onPressed: () {},
                             icon: const Icon(Icons.apple, color: Colors.white),
@@ -644,9 +607,7 @@ class _AccountScreenState extends State<AccountScreen> {
                               ),
                             ),
                           ),
-
                           const SizedBox(height: 8),
-
                           TextButton(
                             onPressed: _signUpWithEmail,
                             child: Text(L(context, 'sign_up')),
@@ -655,16 +616,12 @@ class _AccountScreenState extends State<AccountScreen> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 20),
-
                   Text(
                     L(context, 'or_use_email'),
-                    style: TextStyle(color: Colors.black54),
+                    style: const TextStyle(color: Colors.black54),
                   ),
-
                   const SizedBox(height: 12),
-
                   TextField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
@@ -672,15 +629,13 @@ class _AccountScreenState extends State<AccountScreen> {
                       hintText: L(context, 'email'),
                       filled: true,
                       fillColor: Colors.white,
-                      border: OutlineInputBorder(
+                      border: const OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(12)),
                         borderSide: BorderSide.none,
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 8),
-
                   TextField(
                     controller: _passwordController,
                     obscureText: true,
@@ -688,15 +643,13 @@ class _AccountScreenState extends State<AccountScreen> {
                       hintText: L(context, 'password'),
                       filled: true,
                       fillColor: Colors.white,
-                      border: OutlineInputBorder(
+                      border: const OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(12)),
                         borderSide: BorderSide.none,
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 12),
-
                   ElevatedButton(
                     onPressed: _loading ? null : _signInWithEmail,
                     style: ElevatedButton.styleFrom(
@@ -717,9 +670,7 @@ class _AccountScreenState extends State<AccountScreen> {
                           )
                         : Text(L(context, 'sign_in')),
                   ),
-
                   const SizedBox(height: 24),
-
                   TextButton(
                     onPressed: _sendPasswordReset,
                     child: Text(L(context, 'forgot_password')),
@@ -745,8 +696,8 @@ class _AccountScreenState extends State<AccountScreen> {
                 end: Alignment.bottomCenter,
                 colors: isDark
                     ? [
-                        Color.fromRGBO(28, 28, 30, 1),
-                        Color.fromRGBO(44, 44, 46, 1),
+                        const Color.fromRGBO(28, 28, 30, 1),
+                        const Color.fromRGBO(44, 44, 46, 1),
                       ]
                     : [Colors.pink.shade50, Colors.pink.shade200],
               ),
@@ -785,65 +736,76 @@ class _AccountScreenState extends State<AccountScreen> {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            Text(
-                              user.displayName ?? user.email ?? 'Người dùng',
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              textAlign: TextAlign.center,
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    user.displayName ??
+                                        user.email ??
+                                        'Người dùng',
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            const EditProfileScreen(),
+                                      ),
+                                    );
+                                  },
+                                  child: const Text("Edit"),
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 8),
-                            if ((_bio ?? '').isNotEmpty)
-                              Padding(
+
+                            // Bọc phần hiển thị Bio bằng InkWell để kích hoạt hàm _editBio khi nhấn vào
+                            InkWell(
+                              onTap: _editBio,
+                              borderRadius: BorderRadius.circular(8),
+                              child: Padding(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 12.0,
+                                  horizontal: 16,
+                                  vertical: 8,
                                 ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
+                                child: (_bio ?? '').isNotEmpty
+                                    ? Text(
                                         _bio!,
                                         style: TextStyle(
-                                          color: Colors.grey[700],
+                                          color: isDark
+                                              ? Colors.white70
+                                              : Colors.grey[800],
+                                          fontSize: 15,
                                         ),
+                                        textAlign: TextAlign.center,
+                                      )
+                                    : Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(
+                                            Icons.edit,
+                                            size: 16,
+                                            color: Colors.pink,
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            L(context, 'add_bio'),
+                                            style: const TextStyle(
+                                              color: Colors.pink,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                    IconButton(
-                                      onPressed: _editBio,
-                                      icon: const Icon(Icons.edit, size: 18),
-                                      tooltip: 'Chỉnh sửa bio',
-                                    ),
-                                  ],
-                                ),
-                              )
-                            else
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'Chào mừng trở lại!',
-                                    style: TextStyle(color: Colors.grey[700]),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  IconButton(
-                                    onPressed: _editBio,
-                                    icon: const Icon(Icons.add, size: 18),
-                                    tooltip: 'Thêm bio',
-                                  ),
-                                ],
-                              ),
-                            const SizedBox(height: 20),
-                            ElevatedButton.icon(
-                              onPressed: _pickAvatar,
-                              icon: const Icon(Icons.photo_camera),
-                              label: const Text('Thêm/Thay avatar'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.pink,
-                                minimumSize: const Size(double.infinity, 48),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
                               ),
                             ),
                             const SizedBox(height: 12),
@@ -853,8 +815,6 @@ class _AccountScreenState extends State<AccountScreen> {
                     ),
                   ),
                 ),
-                // Middle navigation bar inside Account (under profile)
-                // Make it edge-to-edge (no horizontal margin) like TikTok
                 Container(
                   width: double.infinity,
                   margin: const EdgeInsets.symmetric(vertical: 8),
@@ -864,14 +824,12 @@ class _AccountScreenState extends State<AccountScreen> {
                   ),
                   decoration: BoxDecoration(
                     color: isDark
-                        ? Color.fromRGBO(20, 20, 20, 1)
+                        ? const Color.fromRGBO(20, 20, 20, 1)
                         : Colors.white,
-                    // keep flat to edges
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      // My stories (custom 2x3 bars)
                       InkWell(
                         onTap: () => setState(() {
                           _accountTabIndex = 0;
@@ -940,8 +898,6 @@ class _AccountScreenState extends State<AccountScreen> {
                           ],
                         ),
                       ),
-
-                      // Center pen icon (taps toggle showing the Try button below)
                       InkWell(
                         onTap: () => setState(() {
                           _accountTabIndex = 1;
@@ -970,8 +926,6 @@ class _AccountScreenState extends State<AccountScreen> {
                           ],
                         ),
                       ),
-
-                      // Liked
                       InkWell(
                         onTap: () => setState(() {
                           _accountTabIndex = 2;
@@ -1003,10 +957,7 @@ class _AccountScreenState extends State<AccountScreen> {
                     ],
                   ),
                 ),
-
-                // Content area below the nav bar (changes per selected tab)
                 const SizedBox(height: 16),
-                // show different content per tab
                 if (_accountTabIndex == 0)
                   SizedBox(
                     height: 240,
@@ -1014,7 +965,7 @@ class _AccountScreenState extends State<AccountScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.image, size: 56, color: Colors.grey),
+                          const Icon(Icons.image, size: 56, color: Colors.grey),
                           const SizedBox(height: 12),
                           Text(
                             'Bạn chưa viết truyện nào',
@@ -1061,7 +1012,7 @@ class _AccountScreenState extends State<AccountScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.image, size: 56, color: Colors.grey),
+                          const Icon(Icons.image, size: 56, color: Colors.grey),
                           const SizedBox(height: 12),
                           Text(
                             'Bạn chưa viết truyện nào',
@@ -1076,8 +1027,6 @@ class _AccountScreenState extends State<AccountScreen> {
             ),
           ),
         ),
-
-        // Settings icon top-left
         Positioned(
           top: 8,
           right: 8,
@@ -1092,8 +1041,8 @@ class _AccountScreenState extends State<AccountScreen> {
                   child: Container(
                     decoration: BoxDecoration(
                       color: isDark
-                          ? Color.fromRGBO(30, 30, 30, 0.6)
-                          : Color.fromRGBO(255, 255, 255, 0.85),
+                          ? const Color.fromRGBO(30, 30, 30, 0.6)
+                          : const Color.fromRGBO(255, 255, 255, 0.85),
                       shape: BoxShape.circle,
                     ),
                     padding: const EdgeInsets.all(6),
@@ -1121,7 +1070,6 @@ class _AccountScreenState extends State<AccountScreen> {
       if (file != null) {
         final picked = File(file.path);
         setState(() => _avatarImage = picked);
-        // persist avatar path locally
         try {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('avatar_path', picked.path);
@@ -1149,7 +1097,6 @@ class _AccountScreenState extends State<AccountScreen> {
                 title: Text(L(context, 'appearance')),
                 onTap: () {
                   Navigator.of(ctx).pop();
-                  // show theme chooser
                   if (!mounted) return;
                   showDialog(
                     context: context,
@@ -1278,7 +1225,6 @@ class _AccountScreenState extends State<AccountScreen> {
                     style: const TextStyle(color: Colors.white),
                   ),
                   onTap: () async {
-                    // ask for confirmation before logging out
                     final confirm = await showDialog<bool>(
                       context: context,
                       builder: (dctx) => AlertDialog(
@@ -1323,6 +1269,51 @@ class _AccountScreenState extends State<AccountScreen> {
           ),
         );
       },
+    );
+  }
+}
+
+class EditProfileScreen extends StatelessWidget {
+  const EditProfileScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      backgroundColor: isDark ? Colors.black : Colors.white,
+      appBar: AppBar(title: const Text("Edit profile")),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          const Center(
+            child: CircleAvatar(
+              radius: 50,
+              child: Icon(Icons.person, size: 50),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Center(
+            child: TextButton(
+              onPressed: () {},
+              child: const Text("Change photo"),
+            ),
+          ),
+          const SizedBox(height: 20),
+          const ListTile(
+            title: Text("Name"),
+            trailing: Icon(Icons.chevron_right),
+          ),
+          const ListTile(
+            title: Text("Username"),
+            trailing: Icon(Icons.chevron_right),
+          ),
+          const ListTile(
+            title: Text("Bio"),
+            trailing: Icon(Icons.chevron_right),
+          ),
+        ],
+      ),
     );
   }
 }
