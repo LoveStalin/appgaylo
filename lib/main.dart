@@ -6,6 +6,7 @@ import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'sign_up_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -144,7 +145,7 @@ const Map<String, Map<String, String>> _localized = {
     'confirm': 'Đăng xuất',
     'edit_bio': 'Chỉnh sửa Bio',
     'save': 'Lưu',
-    'add_bio': 'Thêm tiểu sử (Bio)',
+    'add_bio': 'Thêm bio',
     'welcome_back': 'Chào mừng trở lại!',
   },
   'en': {
@@ -472,21 +473,12 @@ class _AccountScreenState extends State<AccountScreen> {
     }
   }
 
-  Future<void> _signUpWithEmail() async {
-    try {
-      setState(() => _loading = true);
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
-      await _showMessage('Đăng ký thành công');
-    } on FirebaseAuthException catch (e) {
-      await _showMessage(e.message ?? 'Lỗi đăng ký');
-    } catch (e) {
-      await _showMessage('Lỗi: ${e.toString()}');
-    } finally {
-      setState(() => _loading = false);
-    }
+  // SỬA ĐỔI CHÍNH TẠI ĐÂY: Gọi chuyển sang màn hình Đăng ký mới
+  void _signUpWithEmail() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const SignUpScreen()),
+    );
   }
 
   Future<void> _sendPasswordReset() async {
@@ -500,6 +492,218 @@ class _AccountScreenState extends State<AccountScreen> {
     } catch (e) {
       await _showMessage('Lỗi: ${e.toString()}');
     }
+  }
+
+  Future<void> _pickAvatar() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? file = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+      );
+      if (file != null) {
+        final picked = File(file.path);
+        setState(() => _avatarImage = picked);
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('avatar_path', picked.path);
+        } catch (_) {}
+      }
+    } catch (e) {
+      await _showMessage('Không thể chọn ảnh: ${e.toString()}');
+    }
+  }
+
+  void _openSettings() {
+    if (!mounted) return;
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.palette),
+                title: Text(L(context, 'appearance')),
+                onTap: () {
+                  Navigator.of(ctx).pop();
+                  if (!mounted) return;
+                  showDialog(
+                    context: context,
+                    builder: (dctx) {
+                      return AlertDialog(
+                        title: Text(L(context, 'choose_appearance')),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ListTile(
+                              leading: const Icon(Icons.wb_sunny),
+                              title: Text(L(context, 'light')),
+                              onTap: () {
+                                MyApp.setAppTheme(context, ThemeMode.light);
+                                Navigator.of(dctx).pop();
+                              },
+                            ),
+                            ListTile(
+                              leading: const Icon(Icons.nights_stay),
+                              title: Text(L(context, 'dark')),
+                              onTap: () {
+                                MyApp.setAppTheme(context, ThemeMode.dark);
+                                Navigator.of(dctx).pop();
+                              },
+                            ),
+                          ],
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(dctx).pop(),
+                            child: Text(L(context, 'cancel')),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.language),
+                title: Text(L(context, 'language')),
+                onTap: () {
+                  Navigator.of(ctx).pop();
+                  if (!mounted) return;
+                  final current = MyApp.getAppLanguage(context);
+                  showDialog(
+                    context: context,
+                    builder: (dctx) {
+                      String selected = current;
+                      return StatefulBuilder(
+                        builder: (dctx, setStateDialog) {
+                          return AlertDialog(
+                            title: Text(L(context, 'language')),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ListTile(
+                                  title: const Text('Tiếng Việt'),
+                                  trailing: selected == 'vi'
+                                      ? const Icon(
+                                          Icons.check,
+                                          color: Colors.green,
+                                        )
+                                      : const SizedBox.shrink(),
+                                  onTap: () =>
+                                      setStateDialog(() => selected = 'vi'),
+                                ),
+                                ListTile(
+                                  title: const Text('English'),
+                                  trailing: selected == 'en'
+                                      ? const Icon(
+                                          Icons.check,
+                                          color: Colors.green,
+                                        )
+                                      : const SizedBox.shrink(),
+                                  onTap: () =>
+                                      setStateDialog(() => selected = 'en'),
+                                ),
+                              ],
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(dctx).pop(),
+                                child: Text(L(context, 'cancel')),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  MyApp.setAppLanguage(context, selected);
+                                  Navigator.of(dctx).pop();
+                                  _showMessage('Ngôn ngữ đã được cập nhật');
+                                },
+                                child: Text(L(context, 'save')),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.person),
+                title: Text(L(context, 'account_setting')),
+                onTap: () {
+                  Navigator.of(ctx).pop();
+                  _showMessage('Chức năng Tài khoản (tạm)');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.lock),
+                title: Text(L(context, 'security')),
+                onTap: () {
+                  Navigator.of(ctx).pop();
+                  _showMessage('Chức năng Bảo mật (tạm)');
+                },
+              ),
+              const Divider(),
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: ListTile(
+                  tileColor: Colors.redAccent,
+                  leading: const Icon(Icons.logout, color: Colors.white),
+                  title: Text(
+                    L(context, 'logout'),
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  onTap: () async {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (dctx) => AlertDialog(
+                        title: Text(L(context, 'logout_confirm_title')),
+                        content: Text(L(context, 'logout_confirm_body')),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(dctx).pop(false),
+                            child: Text(L(context, 'cancel')),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(dctx).pop(true),
+                            child: Text(L(context, 'confirm')),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirm != true) return;
+
+                    if (!mounted) return;
+                    Navigator.of(context).pop();
+                    await FirebaseAuth.instance.signOut();
+                    try {
+                      await GoogleSignIn().signOut();
+                    } catch (_) {}
+                    try {
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.remove('avatar_path');
+                      await prefs.remove('bio');
+                    } catch (_) {}
+                    if (!mounted) return;
+                    setState(() {
+                      _avatarImage = null;
+                      _bio = null;
+                    });
+                    _showMessage(L(context, 'logout'));
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -609,7 +813,8 @@ class _AccountScreenState extends State<AccountScreen> {
                           ),
                           const SizedBox(height: 8),
                           TextButton(
-                            onPressed: _signUpWithEmail,
+                            onPressed:
+                                _signUpWithEmail, // Nút Đăng ký gọi hàm chuyển trang
                             child: Text(L(context, 'sign_up')),
                           ),
                         ],
@@ -736,76 +941,113 @@ class _AccountScreenState extends State<AccountScreen> {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    user.displayName ??
-                                        user.email ??
-                                        'Người dùng',
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            const EditProfileScreen(),
-                                      ),
-                                    );
-                                  },
-                                  child: const Text("Edit"),
-                                ),
-                              ],
+                            // 1. Tên hiển thị được đưa ra giữa hoành tráng
+                            Text(
+                              user.displayName ?? user.email ?? 'Người dùng',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 8),
 
-                            // Bọc phần hiển thị Bio bằng InkWell để kích hoạt hàm _editBio khi nhấn vào
+                            // 2. Khu vực hiển thị Bio (Bấm vào vùng này cũng mở hộp thoại sửa nhanh được)
                             InkWell(
                               onTap: _editBio,
                               borderRadius: BorderRadius.circular(8),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
+                                  horizontal: 16.0,
+                                  vertical: 6,
                                 ),
                                 child: (_bio ?? '').isNotEmpty
-                                    ? Text(
-                                        _bio!,
-                                        style: TextStyle(
-                                          color: isDark
-                                              ? Colors.white70
-                                              : Colors.grey[800],
-                                          fontSize: 15,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      )
-                                    : Row(
+                                    ? Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          const Icon(
-                                            Icons.edit,
-                                            size: 16,
-                                            color: Colors.pink,
+                                          Flexible(
+                                            child: Text(
+                                              _bio!,
+                                              style: TextStyle(
+                                                color: Colors.grey[700],
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
                                           ),
                                           const SizedBox(width: 6),
+                                          Icon(
+                                            Icons.edit,
+                                            size: 14,
+                                            color: Colors.grey[500],
+                                          ),
+                                        ],
+                                      )
+                                    : Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
                                           Text(
                                             L(context, 'add_bio'),
-                                            style: const TextStyle(
-                                              color: Colors.pink,
-                                              fontWeight: FontWeight.w600,
+                                            style: TextStyle(
+                                              color: Colors.pink[300],
+                                              fontStyle: FontStyle.italic,
                                             ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Icon(
+                                            Icons.add_comment,
+                                            size: 14,
+                                            color: Colors.pink[300],
                                           ),
                                         ],
                                       ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+
+                            // 3. NÚT "CHỈNH SỬA HỒ SƠ" TO, ĐẸP, RÕ RÀNG (Không thể không thấy)
+                            SizedBox(
+                              width: 220,
+                              height: 40,
+                              child: OutlinedButton.icon(
+                                onPressed: () async {
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const EditProfileScreen(),
+                                    ),
+                                  );
+
+                                  // Đã sửa thành _loadProfileData() để hết sạch lỗi đỏ code biên dịch
+                                  if (result == true) {
+                                    _loadProfileData();
+                                  }
+                                },
+                                icon: const Icon(
+                                  Icons.edit_note,
+                                  size: 18,
+                                  color: Colors.pink,
+                                ),
+                                label: const Text(
+                                  "Chỉnh sửa hồ sơ",
+                                  style: TextStyle(
+                                    color: Colors.pink,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  side: const BorderSide(
+                                    color: Colors.pink,
+                                    width: 1.5,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                ),
                               ),
                             ),
                             const SizedBox(height: 12),
@@ -1059,258 +1301,191 @@ class _AccountScreenState extends State<AccountScreen> {
       ],
     );
   }
-
-  Future<void> _pickAvatar() async {
-    try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? file = await picker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 80,
-      );
-      if (file != null) {
-        final picked = File(file.path);
-        setState(() => _avatarImage = picked);
-        try {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('avatar_path', picked.path);
-        } catch (_) {}
-      }
-    } catch (e) {
-      await _showMessage('Không thể chọn ảnh: ${e.toString()}');
-    }
-  }
-
-  void _openSettings() {
-    if (!mounted) return;
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.palette),
-                title: Text(L(context, 'appearance')),
-                onTap: () {
-                  Navigator.of(ctx).pop();
-                  if (!mounted) return;
-                  showDialog(
-                    context: context,
-                    builder: (dctx) {
-                      return AlertDialog(
-                        title: Text(L(context, 'choose_appearance')),
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            ListTile(
-                              leading: const Icon(Icons.wb_sunny),
-                              title: Text(L(context, 'light')),
-                              onTap: () {
-                                MyApp.setAppTheme(context, ThemeMode.light);
-                                Navigator.of(dctx).pop();
-                              },
-                            ),
-                            ListTile(
-                              leading: const Icon(Icons.nights_stay),
-                              title: Text(L(context, 'dark')),
-                              onTap: () {
-                                MyApp.setAppTheme(context, ThemeMode.dark);
-                                Navigator.of(dctx).pop();
-                              },
-                            ),
-                          ],
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(dctx).pop(),
-                            child: Text(L(context, 'cancel')),
-                          ),
-                        ],
-                      );
-                    },
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.language),
-                title: Text(L(context, 'language')),
-                onTap: () {
-                  Navigator.of(ctx).pop();
-                  if (!mounted) return;
-                  final current = MyApp.getAppLanguage(context);
-                  showDialog(
-                    context: context,
-                    builder: (dctx) {
-                      String selected = current;
-                      return StatefulBuilder(
-                        builder: (dctx, setStateDialog) {
-                          return AlertDialog(
-                            title: Text(L(context, 'language')),
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                ListTile(
-                                  title: const Text('Tiếng Việt'),
-                                  trailing: selected == 'vi'
-                                      ? const Icon(
-                                          Icons.check,
-                                          color: Colors.green,
-                                        )
-                                      : const SizedBox.shrink(),
-                                  onTap: () =>
-                                      setStateDialog(() => selected = 'vi'),
-                                ),
-                                ListTile(
-                                  title: const Text('English'),
-                                  trailing: selected == 'en'
-                                      ? const Icon(
-                                          Icons.check,
-                                          color: Colors.green,
-                                        )
-                                      : const SizedBox.shrink(),
-                                  onTap: () =>
-                                      setStateDialog(() => selected = 'en'),
-                                ),
-                              ],
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.of(dctx).pop(),
-                                child: Text(L(context, 'cancel')),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  MyApp.setAppLanguage(context, selected);
-                                  Navigator.of(dctx).pop();
-                                  _showMessage('Ngôn ngữ đã được cập nhật');
-                                },
-                                child: Text(L(context, 'save')),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.person),
-                title: Text(L(context, 'account_setting')),
-                onTap: () {
-                  Navigator.of(ctx).pop();
-                  _showMessage('Chức năng Tài khoản (tạm)');
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.lock),
-                title: Text(L(context, 'security')),
-                onTap: () {
-                  Navigator.of(ctx).pop();
-                  _showMessage('Chức năng Bảo mật (tạm)');
-                },
-              ),
-              const Divider(),
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: ListTile(
-                  tileColor: Colors.redAccent,
-                  leading: const Icon(Icons.logout, color: Colors.white),
-                  title: Text(
-                    L(context, 'logout'),
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  onTap: () async {
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (dctx) => AlertDialog(
-                        title: Text(L(context, 'logout_confirm_title')),
-                        content: Text(L(context, 'logout_confirm_body')),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(dctx).pop(false),
-                            child: Text(L(context, 'cancel')),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.of(dctx).pop(true),
-                            child: Text(L(context, 'confirm')),
-                          ),
-                        ],
-                      ),
-                    );
-
-                    if (confirm != true) return;
-
-                    if (!mounted) return;
-                    Navigator.of(context).pop();
-                    await FirebaseAuth.instance.signOut();
-                    try {
-                      await GoogleSignIn().signOut();
-                    } catch (_) {}
-                    try {
-                      final prefs = await SharedPreferences.getInstance();
-                      await prefs.remove('avatar_path');
-                      await prefs.remove('bio');
-                    } catch (_) {}
-                    if (!mounted) return;
-                    setState(() {
-                      _avatarImage = null;
-                      _bio = null;
-                    });
-                    _showMessage(L(context, 'logout'));
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
 }
 
-class EditProfileScreen extends StatelessWidget {
+// ĐƯỢC TÁCH ĐỘC LẬP (Không nằm lỗi trong AccountScreenState nữa)
+// ĐÃ ĐƯỢC CHUYỂN THÀNH STATEFULWIDGET ĐỂ XỬ LÝ LOGIC NHẬP LIỆU
+class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
+
+  @override
+  State<EditProfileScreen> createState() => _EditProfileScreenState();
+}
+
+class _EditProfileScreenState extends State<EditProfileScreen> {
+  final _nameController = TextEditingController();
+  final _bioController = TextEditingController();
+  bool _isLoading = false;
+  final User? _currentUser = FirebaseAuth.instance.currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    // 1. Lấy tên hiện tại từ Firebase Auth đổ vào ô nhập
+    _nameController.text = _currentUser?.displayName ?? '';
+    _loadCurrentBio();
+  }
+
+  // 2. Lấy Bio hiện tại từ SharedPreferences đổ vào ô nhập
+  Future<void> _loadCurrentBio() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      setState(() {
+        _bioController.text = prefs.getString('bio') ?? '';
+      });
+    } catch (_) {}
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _bioController.dispose();
+    super.dispose();
+  }
+
+  // 3. Logic lưu thông tin khi nhấn nút "Save"
+  Future<void> _saveProfile() async {
+    final newName = _nameController.text.trim();
+    final newBio = _bioController.text.trim();
+
+    if (newName.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tên hiển thị không được để trống')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      // Lưu tên lên Firebase
+      if (_currentUser != null && newName != _currentUser.displayName) {
+        await _currentUser.updateDisplayName(newName);
+      }
+
+      // Lưu bio vào SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('bio', newBio);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cập nhật thông tin thành công!')),
+        );
+        // Trả về giá trị true để màn hình AccountScreen biết và reload lại giao diện
+        Navigator.of(context).pop(true);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi khi lưu: ${e.toString()}')));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? Colors.black : Colors.white,
-      appBar: AppBar(title: const Text("Edit profile")),
+      backgroundColor: isDark
+          ? const Color.fromRGBO(28, 28, 30, 1)
+          : Colors.pink.shade50,
+      appBar: AppBar(
+        title: const Text("Chỉnh sửa hồ sơ"),
+        centerTitle: true,
+        backgroundColor: isDark ? Colors.grey[850] : Colors.pink[100],
+        actions: [
+          // Nút lưu góc trên bên phải
+          _isLoading
+              ? const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.pink,
+                      ),
+                    ),
+                  ),
+                )
+              : TextButton(
+                  onPressed: _saveProfile,
+                  child: const Text(
+                    "Lưu",
+                    style: TextStyle(
+                      color: Colors.pink,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
+          // Phần ảnh đại diện (giữ nguyên khung chờ xử lý avatar của bạn)
           const Center(
-            child: CircleAvatar(
-              radius: 50,
-              child: Icon(Icons.person, size: 50),
+            child: Stack(
+              children: [
+                CircleAvatar(
+                  radius: 50,
+                  backgroundColor: Colors.white,
+                  child: Icon(Icons.person, size: 60, color: Colors.pink),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 12),
-          Center(
-            child: TextButton(
-              onPressed: () {},
-              child: const Text("Change photo"),
+          const SizedBox(height: 24),
+
+          // Ô NHẬP TÊN (Thay cho ListTile tĩnh cũ)
+          const Text(
+            "Họ và tên",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _nameController,
+            decoration: InputDecoration(
+              hintText: "Nhập họ tên của bạn",
+              filled: true,
+              fillColor: isDark ? Colors.grey[800] : Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              prefixIcon: const Icon(Icons.person_outline, color: Colors.pink),
             ),
           ),
           const SizedBox(height: 20),
-          const ListTile(
-            title: Text("Name"),
-            trailing: Icon(Icons.chevron_right),
+
+          // Ô NHẬP BIO / TIỂU SỬ (Thay cho ListTile tĩnh cũ)
+          const Text(
+            "Tiểu sử (Bio)",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
           ),
-          const ListTile(
-            title: Text("Username"),
-            trailing: Icon(Icons.chevron_right),
-          ),
-          const ListTile(
-            title: Text("Bio"),
-            trailing: Icon(Icons.chevron_right),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _bioController,
+            maxLines: 3, // Cho phép nhập nhiều dòng
+            decoration: InputDecoration(
+              hintText: "Viết gì đó về bản thân bạn...",
+              filled: true,
+              fillColor: isDark ? Colors.grey[800] : Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              prefixIcon: const Padding(
+                padding: EdgeInsets.only(bottom: 40), // Căn icon lên đầu ô nhập
+                child: Icon(Icons.article_outlined, color: Colors.pink),
+              ),
+            ),
           ),
         ],
       ),
