@@ -473,7 +473,6 @@ class _AccountScreenState extends State<AccountScreen> {
     }
   }
 
-  // SỬA ĐỔI CHÍNH TẠI ĐÂY: Gọi chuyển sang màn hình Đăng ký mới
   void _signUpWithEmail() {
     Navigator.push(
       context,
@@ -813,8 +812,7 @@ class _AccountScreenState extends State<AccountScreen> {
                           ),
                           const SizedBox(height: 8),
                           TextButton(
-                            onPressed:
-                                _signUpWithEmail, // Nút Đăng ký gọi hàm chuyển trang
+                            onPressed: _signUpWithEmail,
                             child: Text(L(context, 'sign_up')),
                           ),
                         ],
@@ -907,365 +905,335 @@ class _AccountScreenState extends State<AccountScreen> {
                     : [Colors.pink.shade50, Colors.pink.shade200],
               ),
             ),
-            child: Column(
-              children: [
-                Expanded(
-                  child: SafeArea(
-                    bottom: false,
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const SizedBox(height: 20),
-                            GestureDetector(
-                              onTap: _pickAvatar,
-                              child: CircleAvatar(
-                                radius: 56,
-                                backgroundColor: Colors.white,
-                                backgroundImage: _avatarImage != null
-                                    ? FileImage(_avatarImage!) as ImageProvider
-                                    : (user.photoURL != null
-                                          ? NetworkImage(user.photoURL!)
-                                          : null),
-                                child:
-                                    _avatarImage == null &&
-                                        user.photoURL == null
-                                    ? const Icon(
-                                        Icons.person,
-                                        size: 56,
-                                        color: Colors.pink,
-                                      )
-                                    : null,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            // 1. Tên hiển thị được đưa ra giữa hoành tráng
-                            Text(
-                              user.displayName ?? user.email ?? 'Người dùng',
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 8),
-
-                            // 2. Khu vực hiển thị Bio (Bấm vào vùng này cũng mở hộp thoại sửa nhanh được)
-                            InkWell(
-                              onTap: _editBio,
-                              borderRadius: BorderRadius.circular(8),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16.0,
-                                  vertical: 6,
-                                ),
-                                child: (_bio ?? '').isNotEmpty
-                                    ? Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Flexible(
-                                            child: Text(
-                                              _bio!,
-                                              style: TextStyle(
-                                                color: Colors.grey[700],
-                                              ),
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Icon(
-                                            Icons.edit,
-                                            size: 14,
-                                            color: Colors.grey[500],
-                                          ),
-                                        ],
-                                      )
-                                    : Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            L(context, 'add_bio'),
-                                            style: TextStyle(
-                                              color: Colors.pink[300],
-                                              fontStyle: FontStyle.italic,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Icon(
-                                            Icons.add_comment,
-                                            size: 14,
-                                            color: Colors.pink[300],
-                                          ),
-                                        ],
-                                      ),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-
-                            // 3. NÚT "CHỈNH SỬA HỒ SƠ" TO, ĐẸP, RÕ RÀNG (Không thể không thấy)
-                            SizedBox(
-                              width: 220,
-                              height: 40,
-                              child: OutlinedButton.icon(
-                                onPressed: () async {
-                                  final result = await Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const EditProfileScreen(),
-                                    ),
-                                  );
-
-                                  // Đã sửa thành _loadProfileData() để hết sạch lỗi đỏ code biên dịch
-                                  if (result == true) {
-                                    _loadProfileData();
-                                  }
-                                },
-                                icon: const Icon(
-                                  Icons.edit_note,
-                                  size: 18,
-                                  color: Colors.pink,
-                                ),
-                                label: const Text(
-                                  "Chỉnh sửa hồ sơ",
-                                  style: TextStyle(
-                                    color: Colors.pink,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(
-                                    color: Colors.pink,
-                                    width: 1.5,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                          ],
-                        ),
+            child: SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 30),
+                    GestureDetector(
+                      onTap: _pickAvatar,
+                      child: CircleAvatar(
+                        radius: 56,
+                        backgroundColor: Colors.white,
+                        backgroundImage: _avatarImage != null
+                            ? FileImage(_avatarImage!) as ImageProvider
+                            : (user.photoURL != null
+                                  ? NetworkImage(user.photoURL!)
+                                  : null),
+                        child: _avatarImage == null && user.photoURL == null
+                            ? const Icon(
+                                Icons.person,
+                                size: 56,
+                                color: Colors.pink,
+                              )
+                            : null,
                       ),
                     ),
-                  ),
-                ),
-                Container(
-                  width: double.infinity,
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 8,
-                    horizontal: 0,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? const Color.fromRGBO(20, 20, 20, 1)
-                        : Colors.white,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      InkWell(
-                        onTap: () => setState(() {
-                          _accountTabIndex = 0;
-                          _showWriteButton = false;
-                        }),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(
-                              width: 40,
-                              height: 28,
-                              child: Column(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            user.displayName ?? user.email ?? 'Người dùng',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        TextButton(
+                          onPressed: () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const EditProfileScreen(),
+                              ),
+                            );
+
+                            if (result == true) {
+                              _loadProfileData();
+                              setState(() {});
+                            }
+                          },
+                          child: const Text("Edit"),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    InkWell(
+                      onTap: _editBio,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 6,
+                        ),
+                        child: (_bio ?? '').isNotEmpty
+                            ? Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: List.generate(3, (i) {
-                                      return Container(
-                                        width: 6,
-                                        height: 8,
-                                        decoration: BoxDecoration(
-                                          color: _accountTabIndex == 0
-                                              ? Colors.pink
-                                              : Colors.grey,
-                                          borderRadius: BorderRadius.circular(
-                                            2,
-                                          ),
-                                        ),
-                                      );
-                                    }),
+                                  Flexible(
+                                    child: Text(
+                                      _bio!,
+                                      style: TextStyle(color: Colors.grey[700]),
+                                      textAlign: TextAlign.center,
+                                    ),
                                   ),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: List.generate(3, (i) {
-                                      return Container(
-                                        width: 6,
-                                        height: 8,
-                                        decoration: BoxDecoration(
-                                          color: _accountTabIndex == 0
-                                              ? Colors.pink
-                                              : Colors.grey,
-                                          borderRadius: BorderRadius.circular(
-                                            2,
-                                          ),
-                                        ),
-                                      );
-                                    }),
+                                  const SizedBox(width: 6),
+                                  Icon(
+                                    Icons.edit,
+                                    size: 14,
+                                    color: Colors.grey[500],
+                                  ),
+                                ],
+                              )
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    L(context, 'add_bio'),
+                                    style: TextStyle(
+                                      color: Colors.pink[300],
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Icon(
+                                    Icons.add_comment,
+                                    size: 14,
+                                    color: Colors.pink[300],
                                   ),
                                 ],
                               ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? const Color.fromRGBO(20, 20, 20, 1)
+                            : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          InkWell(
+                            onTap: () => setState(() {
+                              _accountTabIndex = 0;
+                              _showWriteButton = false;
+                            }),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(
+                                  width: 40,
+                                  height: 28,
+                                  child: Column(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: List.generate(3, (i) {
+                                          return Container(
+                                            width: 6,
+                                            height: 8,
+                                            decoration: BoxDecoration(
+                                              color: _accountTabIndex == 0
+                                                  ? Colors.pink
+                                                  : Colors.grey,
+                                              borderRadius:
+                                                  BorderRadius.circular(2),
+                                            ),
+                                          );
+                                        }),
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: List.generate(3, (i) {
+                                          return Container(
+                                            width: 6,
+                                            height: 8,
+                                            decoration: BoxDecoration(
+                                              color: _accountTabIndex == 0
+                                                  ? Colors.pink
+                                                  : Colors.grey,
+                                              borderRadius:
+                                                  BorderRadius.circular(2),
+                                            ),
+                                          );
+                                        }),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Container(
+                                  height: 3,
+                                  width: 24,
+                                  decoration: BoxDecoration(
+                                    color: _accountTabIndex == 0
+                                        ? (isDark ? Colors.white : Colors.black)
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 6),
-                            Container(
-                              height: 3,
-                              width: 24,
-                              decoration: BoxDecoration(
-                                color: _accountTabIndex == 0
-                                    ? (isDark ? Colors.white : Colors.black)
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(2),
+                          ),
+                          InkWell(
+                            onTap: () => setState(() {
+                              _accountTabIndex = 1;
+                              _showWriteButton = !_showWriteButton;
+                            }),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.create,
+                                  color: _accountTabIndex == 1
+                                      ? Colors.pink
+                                      : Colors.grey,
+                                ),
+                                const SizedBox(height: 6),
+                                Container(
+                                  height: 3,
+                                  width: 24,
+                                  decoration: BoxDecoration(
+                                    color: _accountTabIndex == 1
+                                        ? (isDark ? Colors.white : Colors.black)
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          InkWell(
+                            onTap: () => setState(() {
+                              _accountTabIndex = 2;
+                              _showWriteButton = false;
+                            }),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.favorite_border,
+                                  color: _accountTabIndex == 2
+                                      ? Colors.pink
+                                      : Colors.grey,
+                                ),
+                                const SizedBox(height: 6),
+                                Container(
+                                  height: 3,
+                                  width: 24,
+                                  decoration: BoxDecoration(
+                                    color: _accountTabIndex == 2
+                                        ? (isDark ? Colors.white : Colors.black)
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    if (_accountTabIndex == 0)
+                      SizedBox(
+                        height: 240,
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.image,
+                                size: 56,
+                                color: Colors.grey,
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 12),
+                              Text(
+                                'Bạn chưa viết truyện nào',
+                                style: TextStyle(color: Colors.grey[600]),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else if (_accountTabIndex == 1)
+                      SizedBox(
+                        height: 240,
+                        child: Center(
+                          child: _showWriteButton
+                              ? ElevatedButton(
+                                  onPressed: () {
+                                    final homeState = context
+                                        .findAncestorStateOfType<
+                                          _HomePageState
+                                        >();
+                                    if (homeState != null) {
+                                      homeState.setState(
+                                        () => homeState.currentIndex = 2,
+                                      );
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.pink,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 28,
+                                      vertical: 12,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(24),
+                                    ),
+                                  ),
+                                  child: const Text('Thử viết truyện'),
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                      )
+                    else
+                      SizedBox(
+                        height: 240,
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.image,
+                                size: 56,
+                                color: Colors.grey,
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Bạn chưa viết truyện nào',
+                                style: TextStyle(color: Colors.grey[600]),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      InkWell(
-                        onTap: () => setState(() {
-                          _accountTabIndex = 1;
-                          _showWriteButton = !_showWriteButton;
-                        }),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.create,
-                              color: _accountTabIndex == 1
-                                  ? Colors.pink
-                                  : Colors.grey,
-                            ),
-                            const SizedBox(height: 6),
-                            Container(
-                              height: 3,
-                              width: 24,
-                              decoration: BoxDecoration(
-                                color: _accountTabIndex == 1
-                                    ? (isDark ? Colors.white : Colors.black)
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      InkWell(
-                        onTap: () => setState(() {
-                          _accountTabIndex = 2;
-                          _showWriteButton = false;
-                        }),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.favorite_border,
-                              color: _accountTabIndex == 2
-                                  ? Colors.pink
-                                  : Colors.grey,
-                            ),
-                            const SizedBox(height: 6),
-                            Container(
-                              height: 3,
-                              width: 24,
-                              decoration: BoxDecoration(
-                                color: _accountTabIndex == 2
-                                    ? (isDark ? Colors.white : Colors.black)
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                    const SizedBox(height: 16),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                if (_accountTabIndex == 0)
-                  SizedBox(
-                    height: 240,
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.image, size: 56, color: Colors.grey),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Bạn chưa viết truyện nào',
-                            style: TextStyle(color: Colors.grey[600]),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                else if (_accountTabIndex == 1)
-                  SizedBox(
-                    height: 240,
-                    child: Center(
-                      child: _showWriteButton
-                          ? ElevatedButton(
-                              onPressed: () {
-                                final homeState = context
-                                    .findAncestorStateOfType<_HomePageState>();
-                                if (homeState != null) {
-                                  homeState.setState(
-                                    () => homeState.currentIndex = 2,
-                                  );
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.pink,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 28,
-                                  vertical: 12,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(24),
-                                ),
-                              ),
-                              child: const Text('Thử viết truyện'),
-                            )
-                          : const SizedBox.shrink(),
-                    ),
-                  )
-                else
-                  SizedBox(
-                    height: 240,
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.image, size: 56, color: Colors.grey),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Bạn chưa viết truyện nào',
-                            style: TextStyle(color: Colors.grey[600]),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                const SizedBox(height: 16),
-              ],
+              ),
             ),
           ),
         ),
@@ -1303,8 +1271,6 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 }
 
-// ĐƯỢC TÁCH ĐỘC LẬP (Không nằm lỗi trong AccountScreenState nữa)
-// ĐÃ ĐƯỢC CHUYỂN THÀNH STATEFULWIDGET ĐỂ XỬ LÝ LOGIC NHẬP LIỆU
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
 
@@ -1321,12 +1287,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   void initState() {
     super.initState();
-    // 1. Lấy tên hiện tại từ Firebase Auth đổ vào ô nhập
     _nameController.text = _currentUser?.displayName ?? '';
     _loadCurrentBio();
   }
 
-  // 2. Lấy Bio hiện tại từ SharedPreferences đổ vào ô nhập
   Future<void> _loadCurrentBio() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -1343,7 +1307,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
-  // 3. Logic lưu thông tin khi nhấn nút "Save"
   Future<void> _saveProfile() async {
     final newName = _nameController.text.trim();
     final newBio = _bioController.text.trim();
@@ -1358,12 +1321,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Lưu tên lên Firebase
       if (_currentUser != null && newName != _currentUser.displayName) {
         await _currentUser.updateDisplayName(newName);
       }
 
-      // Lưu bio vào SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('bio', newBio);
 
@@ -1371,7 +1332,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Cập nhật thông tin thành công!')),
         );
-        // Trả về giá trị true để màn hình AccountScreen biết và reload lại giao diện
         Navigator.of(context).pop(true);
       }
     } catch (e) {
@@ -1398,7 +1358,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         centerTitle: true,
         backgroundColor: isDark ? Colors.grey[850] : Colors.pink[100],
         actions: [
-          // Nút lưu góc trên bên phải
           _isLoading
               ? const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16.0),
@@ -1429,7 +1388,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          // Phần ảnh đại diện (giữ nguyên khung chờ xử lý avatar của bạn)
           const Center(
             child: Stack(
               children: [
@@ -1442,8 +1400,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
           ),
           const SizedBox(height: 24),
-
-          // Ô NHẬP TÊN (Thay cho ListTile tĩnh cũ)
           const Text(
             "Họ và tên",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
@@ -1463,8 +1419,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
           ),
           const SizedBox(height: 20),
-
-          // Ô NHẬP BIO / TIỂU SỬ (Thay cho ListTile tĩnh cũ)
           const Text(
             "Tiểu sử (Bio)",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
@@ -1472,7 +1426,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           const SizedBox(height: 8),
           TextField(
             controller: _bioController,
-            maxLines: 3, // Cho phép nhập nhiều dòng
+            maxLines: 3,
             decoration: InputDecoration(
               hintText: "Viết gì đó về bản thân bạn...",
               filled: true,
@@ -1482,7 +1436,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 borderSide: BorderSide.none,
               ),
               prefixIcon: const Padding(
-                padding: EdgeInsets.only(bottom: 40), // Căn icon lên đầu ô nhập
+                padding: EdgeInsets.only(bottom: 40),
                 child: Icon(Icons.article_outlined, color: Colors.pink),
               ),
             ),
