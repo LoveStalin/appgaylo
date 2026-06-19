@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'main.dart'; // Import để sử dụng hàm L(context, key) từ main.dart
+import 'main.dart';
+import 'email_verification_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -39,7 +40,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
 
-    // Kiểm tra tính hợp lệ cơ bản của dữ liệu nhập vào
     if (name.isEmpty ||
         email.isEmpty ||
         password.isEmpty ||
@@ -68,10 +68,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
       // 2. Cập nhật Họ và tên (displayName) vào Profile của User
       await credential.user?.updateDisplayName(name);
 
-      _showMessage('Đăng ký tài khoản thành công!');
+      // 3. LOGIC MỚI Thêm vào: Gửi link kích hoạt vào email vừa đăng ký
+      await credential.user?.sendEmailVerification();
 
-      // 3. Quay trở về màn hình trước đó (màn hình Đăng nhập)
-      if (mounted) Navigator.of(context).pop();
+      _showMessage(
+        'Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.',
+      );
+
+      // 4. LOGIC MỚI Thêm vào: Chuyển hướng sang màn hình chờ kích hoạt thay vì gọi hàm .pop() như cũ
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EmailVerificationScreen(email: email),
+          ),
+        );
+      }
     } on FirebaseAuthException catch (e) {
       // Bắt các lỗi phổ biến từ Firebase (ví dụ: email đã tồn tại, sai định dạng...)
       _showMessage(e.message ?? 'Đã xảy ra lỗi khi đăng ký');
