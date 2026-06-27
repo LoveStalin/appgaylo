@@ -65,12 +65,12 @@ class StoryCard extends StatelessWidget {
             ),
 
             // (Tùy chọn) M có thể mở comment dòng dưới để hiện thêm tên tác giả nếu muốn
-            // Text(
-            //   author,
-            //   style: const TextStyle(fontSize: 12, color: Colors.grey),
-            //   maxLines: 1,
-            //   overflow: TextOverflow.ellipsis,
-            // ),
+            Text(
+              author,
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
         ),
       ),

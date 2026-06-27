@@ -17,10 +17,18 @@ class StoryDetailScreen extends StatelessWidget {
             // Ảnh bìa dùng Hero để giữ hiệu ứng phóng to
             Hero(
               tag: data['title'], // Phải trùng tag với StoryCard
-              child: Image.network(data['coverUrl'], height: 300, width: double.infinity, fit: BoxFit.cover),
+              child: Image.network(
+                data['coverUrl'],
+                height: 300,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
             ),
             const SizedBox(height: 20),
-            Text(data['title'], style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            Text(
+              data['title'],
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
             Text("Tác giả: ${data['authorName']}"),
             const SizedBox(height: 10),
             Text(data['description'] ?? "Không có mô tả."),
