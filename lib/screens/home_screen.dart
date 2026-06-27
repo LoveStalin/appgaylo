@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firebase
 import '../main.dart';
 import '../widgets/story_card.dart'; // Gọi StoryCard từ nhà mới của nó vào đây
+import 'story_detail_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -103,8 +104,33 @@ class HomeScreen extends StatelessWidget {
                   author: data['authorName'] ?? 'Ẩn danh',
                   coverUrl:
                       data['coverUrl'] ?? 'https://via.placeholder.com/150',
+                  // Trong HomeScreen.dart
                   onTap: () {
-                    debugPrint("Bấm vào truyện: ${data['title']}");
+                    Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        transitionDuration: const Duration(milliseconds: 600),
+                        pageBuilder: (context, animation, secondaryAnimation) =>
+                            StoryDetailScreen(data: data),
+                        transitionsBuilder:
+                            (context, animation, secondaryAnimation, child) {
+                              // Và sửa ở đây
+                              return RotationTransition(
+                                turns: Tween(
+                                  begin: 0.0,
+                                  end: 1.0,
+                                ).animate(animation),
+                                child: ScaleTransition(
+                                  scale: Tween(
+                                    begin: 0.5,
+                                    end: 1.0,
+                                  ).animate(animation),
+                                  child: child,
+                                ),
+                              );
+                            },
+                      ),
+                    );
                   },
                 );
               },
