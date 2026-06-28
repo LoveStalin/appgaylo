@@ -4,10 +4,11 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:io';
-import 'sign_up_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'edit_profile_screen.dart';
+import '../services/auth_service.dart';
+import 'sign_in_screen.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -17,9 +18,10 @@ class AccountScreen extends StatefulWidget {
 }
 
 class _AccountScreenState extends State<AccountScreen> {
+  final AuthService _authService = AuthService();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool _loading = false;
+
   File? _avatarImage;
   String? _bio;
   int _accountTabIndex = 0;
@@ -94,90 +96,6 @@ class _AccountScreenState extends State<AccountScreen> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
-  }
-
-  Future<void> _signInWithGoogle() async {
-    try {
-      setState(() => _loading = true);
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) {
-        setState(() => _loading = false);
-        return;
-      }
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-      await FirebaseAuth.instance.signInWithCredential(credential);
-      await _showMessage('Đăng nhập thành công với Google');
-    } catch (e) {
-      await _showMessage('Lỗi: ${e.toString()}');
-    } finally {
-      setState(() => _loading = false);
-    }
-  }
-
-  Future<void> _signInWithFacebook() async {
-    try {
-      setState(() => _loading = true);
-      final LoginResult result = await FacebookAuth.instance.login(
-        permissions: ['email', 'public_profile'],
-      );
-
-      if (result.status == LoginStatus.success && result.accessToken != null) {
-        final accessToken = result.accessToken!;
-        final credential = FacebookAuthProvider.credential(accessToken.token);
-        await FirebaseAuth.instance.signInWithCredential(credential);
-        await _showMessage('Đăng nhập thành công với Facebook');
-      } else if (result.status == LoginStatus.cancelled) {
-        await _showMessage('Đã hủy đăng nhập Facebook');
-      } else {
-        await _showMessage('Lỗi đăng nhập Facebook');
-      }
-    } catch (e) {
-      await _showMessage('Lỗi: ${e.toString()}');
-    } finally {
-      setState(() => _loading = false);
-    }
-  }
-
-  Future<void> _signInWithEmail() async {
-    try {
-      setState(() => _loading = true);
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
-      await _showMessage('Đăng nhập thành công');
-    } on FirebaseAuthException catch (e) {
-      await _showMessage(e.message ?? 'Lỗi đăng nhập');
-    } catch (e) {
-      await _showMessage('Lỗi: ${e.toString()}');
-    } finally {
-      setState(() => _loading = false);
-    }
-  }
-
-  void _signUpWithEmail() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const SignUpScreen()),
-    );
-  }
-
-  Future<void> _sendPasswordReset() async {
-    try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(
-        email: _emailController.text.trim(),
-      );
-      await _showMessage('Đã gửi email đặt lại mật khẩu');
-    } on FirebaseAuthException catch (e) {
-      await _showMessage(e.message ?? 'Lỗi');
-    } catch (e) {
-      await _showMessage('Lỗi: ${e.toString()}');
-    }
   }
 
   Future<void> _pickAvatar() async {
@@ -344,44 +262,22 @@ class _AccountScreenState extends State<AccountScreen> {
                     L(context, 'logout'),
                     style: const TextStyle(color: Colors.white),
                   ),
+                  // --- THÊM ĐOẠN NÀY VÀO LÀ XONG ---
                   onTap: () async {
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (dctx) => AlertDialog(
-                        title: Text(L(context, 'logout_confirm_title')),
-                        content: Text(L(context, 'logout_confirm_body')),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(dctx).pop(false),
-                            child: Text(L(context, 'cancel')),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.of(dctx).pop(true),
-                            child: Text(L(context, 'confirm')),
-                          ),
-                        ],
-                      ),
-                    );
+                    // 1. Dùng biến _authService đã khai báo ở đầu class
+                    await _authService.signOut();
+                    await GoogleSignIn().signOut();
+                    await FacebookAuth.instance.logOut();
 
-                    if (confirm != true) return;
+                    // 2. Guard context: Kiểm tra xem màn hình còn tồn tại không
+                    if (!mounted) return;
 
-                    if (!mounted) return;
-                    Navigator.of(context).pop();
-                    await FirebaseAuth.instance.signOut();
-                    try {
-                      await GoogleSignIn().signOut();
-                    } catch (_) {}
-                    try {
-                      final prefs = await SharedPreferences.getInstance();
-                      await prefs.remove('avatar_path');
-                      await prefs.remove('bio');
-                    } catch (_) {}
-                    if (!mounted) return;
-                    setState(() {
-                      _avatarImage = null;
-                      _bio = null;
-                    });
-                    _showMessage(L(context, 'logout'));
+                    // 3. Đóng menu và chuyển trang
+                    Navigator.pop(context);
+                    Navigator.of(context).pushNamedAndRemoveUntil(
+                      '/login',
+                      (route) => false,
+                    ); //REMEMBER THIS LINE
                   },
                 ),
               ),
@@ -393,184 +289,20 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        final user = snapshot.data;
-        if (user != null) {
-          return _buildProfile(user);
-        }
+    final User? currentUser = _authService.currentUser;
 
-        final isDark = Theme.of(context).brightness == Brightness.dark;
-        return Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: isDark
-                  ? [
-                      const Color.fromRGBO(28, 28, 30, 1),
-                      const Color.fromRGBO(44, 44, 46, 1),
-                    ]
-                  : [Colors.pink.shade50, Colors.pink.shade200],
-            ),
-          ),
-          child: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 20),
-                  const CircleAvatar(
-                    radius: 48,
-                    backgroundColor: Colors.white,
-                    child: Icon(Icons.person, size: 48, color: Colors.pink),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    L(context, 'welcome_title'),
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    L(context, 'welcome_sub'),
-                    style: TextStyle(color: Colors.grey[700]),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 4,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          ElevatedButton.icon(
-                            onPressed: _signInWithGoogle,
-                            icon: const Icon(
-                              Icons.g_mobiledata,
-                              color: Colors.white,
-                            ),
-                            label: Text(L(context, 'sign_in_google')),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.redAccent,
-                              minimumSize: const Size(double.infinity, 48),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          ElevatedButton.icon(
-                            onPressed: _signInWithFacebook,
-                            icon: const Icon(
-                              Icons.facebook,
-                              color: Colors.white,
-                            ),
-                            label: Text(L(context, 'sign_in_facebook')),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blueAccent.shade700,
-                              minimumSize: const Size(double.infinity, 48),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          ElevatedButton.icon(
-                            onPressed: () {},
-                            icon: const Icon(Icons.apple, color: Colors.white),
-                            label: Text(L(context, 'sign_in_apple')),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.black,
-                              minimumSize: const Size(double.infinity, 48),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          TextButton(
-                            onPressed: _signUpWithEmail,
-                            child: Text(L(context, 'sign_up')),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    L(context, 'or_use_email'),
-                    style: const TextStyle(color: Colors.black54),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      hintText: L(context, 'email'),
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(12)),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _passwordController,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      hintText: L(context, 'password'),
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(12)),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  ElevatedButton(
-                    onPressed: _loading ? null : _signInWithEmail,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.pink,
-                      minimumSize: const Size(double.infinity, 48),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: _loading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : Text(L(context, 'sign_in')),
-                  ),
-                  const SizedBox(height: 24),
-                  TextButton(
-                    onPressed: _sendPasswordReset,
-                    child: Text(L(context, 'forgot_password')),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+    // 1. Nếu chưa đăng nhập -> Đẩy qua màn hình Login
+    if (currentUser == null) {
+      return const LoginScreen();
+    }
+
+    // 2. Nếu đã đăng nhập -> Gọi hàm _buildProfile của m
+    return Scaffold(
+      body: _buildProfile(
+        currentUser,
+      ), // Đây, hàm cũ của m vẫn dùng được bình thường!
     );
   }
 

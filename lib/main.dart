@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/home_screen.dart';
 import 'screens/account_screen.dart';
+import 'screens/sign_in_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -100,6 +101,11 @@ class _MyAppState extends State<MyApp> {
       ),
       themeMode: _themeMode,
       home: const HomePage(),
+      routes: {
+        '/': (context) => const HomeScreen(),
+        '/login': (context) =>
+            const LoginScreen(), // Đăng ký route login để Navigator tìm thấy
+      },
     );
   }
 }
