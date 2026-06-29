@@ -102,7 +102,7 @@ class _MyAppState extends State<MyApp> {
       themeMode: _themeMode,
       home: const HomePage(),
       routes: {
-        '/': (context) => const HomeScreen(),
+        '/': (context) => HomePage(),
         '/login': (context) =>
             const LoginScreen(), // Đăng ký route login để Navigator tìm thấy
       },
