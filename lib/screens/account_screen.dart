@@ -287,8 +287,6 @@ class _AccountScreenState extends State<AccountScreen> {
       },
     );
   }
-
-  @override
   @override
   Widget build(BuildContext context) {
     final User? currentUser = _authService.currentUser;
