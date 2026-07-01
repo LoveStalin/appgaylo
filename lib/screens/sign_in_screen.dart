@@ -16,6 +16,8 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _loading = false;
 
   Future<void> _handleLogin() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final nav = Navigator.of(context);
     setState(() => _loading = true);
     try {
       await _authService.signIn(
@@ -23,11 +25,10 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordController.text,
       );
       if (!mounted) return;
-      Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+      nav.pushNamedAndRemoveUntil('/', (route) => false);
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -65,6 +66,69 @@ class _LoginScreenState extends State<LoginScreen> {
               child: const Text("Chưa có tài khoản? Đăng ký ngay"),
             ),
             // Thêm các nút Social ở đây nếu muốn
+            // Nút Đăng nhập Google
+            ElevatedButton.icon(
+              onPressed: () async {
+                final messenger = ScaffoldMessenger.of(context);
+                final nav = Navigator.of(context);
+                setState(() => _loading = true); // Hiện vòng quay loading
+                try {
+                  // 1. Thực hiện đăng nhập qua AuthService
+                  await _authService.signInWithGoogle();
+
+                  // 2. "Cái khiên" bảo vệ: Kiểm tra xem người dùng còn ở màn hình Login không
+                  if (!mounted) return;
+
+                  // 3. Nếu còn, mới được phép chuyển trang
+                  nav.pushNamedAndRemoveUntil('/', (route) => false);
+                } catch (e) {
+                  if (!mounted) return;
+                  messenger.showSnackBar(
+                    SnackBar(content: Text("Google lỗi: $e")),
+                  );
+                } finally {
+                  if (mounted) setState(() => _loading = false);
+                }
+              },
+              icon: const Icon(Icons.g_mobiledata, color: Colors.white),
+              label: const Text("Đăng nhập bằng Google"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Nút Đăng nhập Facebook
+            ElevatedButton.icon(
+              onPressed: () async {
+                final messenger = ScaffoldMessenger.of(context);
+                final nav = Navigator.of(context);
+                setState(() => _loading = true);
+                try {
+                  // 1. Thực hiện đăng nhập qua AuthService
+                  await _authService.signInWithFacebook();
+
+                  // 2. "Cái khiên" bảo vệ
+                  if (!mounted) return;
+
+                  // 3. Chuyển trang an toàn
+                  nav.pushNamedAndRemoveUntil('/', (route) => false);
+                } catch (e) {
+                  if (!mounted) return;
+                  messenger.showSnackBar(
+                    SnackBar(content: Text("Facebook lỗi: $e")),
+                  );
+                } finally {
+                  if (mounted) setState(() => _loading = false);
+                }
+              },
+              icon: const Icon(Icons.facebook, color: Colors.white),
+              label: const Text("Đăng nhập bằng Facebook"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+              ),
+            ),
           ],
         ),
       ),

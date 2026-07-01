@@ -264,20 +264,28 @@ class _AccountScreenState extends State<AccountScreen> {
                   ),
                   // --- THÊM ĐOẠN NÀY VÀO LÀ XONG ---
                   onTap: () async {
-                    // 1. Dùng biến _authService đã khai báo ở đầu class
-                    await _authService.signOut();
-                    await GoogleSignIn().signOut();
-                    await FacebookAuth.instance.logOut();
+                    final messenger = ScaffoldMessenger.of(context);
+                    // Close the bottom sheet first to avoid using its context after awaits
+                    Navigator.of(ctx).pop();
 
-                    // 2. Guard context: Kiểm tra xem màn hình còn tồn tại không
+                    try {
+                      await _authService.signOut();
+                      await GoogleSignIn().signOut();
+                      await FacebookAuth.instance.logOut();
+                    } catch (e) {
+                      if (!mounted) return;
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text('Lỗi đăng xuất: ${e.toString()}'),
+                        ),
+                      );
+                      return;
+                    }
+
                     if (!mounted) return;
 
-                    // 3. Đóng menu và chuyển trang
-                    Navigator.pop(context);
-                    Navigator.of(context).pushNamedAndRemoveUntil(
-                      '/login',
-                      (route) => false,
-                    ); //REMEMBER THIS LINE
+                    // Rebuild so LoginScreen appears inside Account tab
+                    setState(() {});
                   },
                 ),
               ),
@@ -287,6 +295,7 @@ class _AccountScreenState extends State<AccountScreen> {
       },
     );
   }
+
   @override
   Widget build(BuildContext context) {
     final User? currentUser = _authService.currentUser;
