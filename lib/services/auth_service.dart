@@ -23,6 +23,28 @@ class AuthService {
     await _auth.currentUser?.sendEmailVerification();
   }
 
+  Future<void> sendPasswordResetEmail(String email) async {
+    final normalizedEmail = email.trim();
+    if (normalizedEmail.isEmpty) {
+      throw Exception('Vui lòng nhập email trước khi đặt lại mật khẩu');
+    }
+
+    final authDomain = _auth.app.options.authDomain;
+    final actionCodeSettings = authDomain != null && authDomain.isNotEmpty
+        ? ActionCodeSettings(url: 'https://$authDomain', handleCodeInApp: true)
+        : null;
+
+    if (actionCodeSettings != null) {
+      await _auth.sendPasswordResetEmail(
+        email: normalizedEmail,
+        actionCodeSettings: actionCodeSettings,
+      );
+      return;
+    }
+
+    await _auth.sendPasswordResetEmail(email: normalizedEmail);
+  }
+
   // 6. Kiểm tra trạng thái đã xác thực email chưa
   bool isEmailVerified() {
     return _auth.currentUser?.emailVerified ?? false;
@@ -78,15 +100,12 @@ class AuthService {
     }
   }
 
+  bool get isSignedIn => _auth.currentUser != null;
+
   // Hàm Đăng xuất tất cả (Firebase + Google + Facebook)
   Future<void> signOutAll() async {
-    // 1. Thoát Firebase
     await _auth.signOut();
-
-    // 2. Thoát Google
     await _googleSignIn.signOut();
-
-    // 3. Thoát Facebook
     await _facebookAuth.logOut();
   }
 

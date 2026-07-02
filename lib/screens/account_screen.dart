@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import '../main.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
@@ -265,13 +263,10 @@ class _AccountScreenState extends State<AccountScreen> {
                   // --- THÊM ĐOẠN NÀY VÀO LÀ XONG ---
                   onTap: () async {
                     final messenger = ScaffoldMessenger.of(context);
-                    // Close the bottom sheet first to avoid using its context after awaits
                     Navigator.of(ctx).pop();
 
                     try {
                       await _authService.signOut();
-                      await GoogleSignIn().signOut();
-                      await FacebookAuth.instance.logOut();
                     } catch (e) {
                       if (!mounted) return;
                       messenger.showSnackBar(
@@ -283,8 +278,6 @@ class _AccountScreenState extends State<AccountScreen> {
                     }
 
                     if (!mounted) return;
-
-                    // Rebuild so LoginScreen appears inside Account tab
                     setState(() {});
                   },
                 ),

@@ -34,11 +34,6 @@ class HomeScreen extends StatelessWidget {
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 10),
-        // Chỗ này tạm thời tao comment lại vì m vừa đổi cấu trúc StoryCard bắt buộc có title, author...
-        // Row(
-        //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        //   children: const [StoryCard(), StoryCard(), StoryCard()],
-        // ),
         const Text(
           "Đang cập nhật truyện nổi bật...",
           style: TextStyle(color: Colors.grey),
