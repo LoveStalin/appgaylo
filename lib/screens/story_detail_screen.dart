@@ -33,10 +33,12 @@ class StoryDetailScreen extends StatelessWidget {
             const SizedBox(height: 10),
             Text(data['description'] ?? "Không có mô tả."),
             const SizedBox(height: 20),
-            // Hai thông tin mới
+            // Creation Day and Last Update Day
             const Divider(),
             Text("Ngày tạo: ${data['createdAt']}"),
             Text("Cập nhật cuối: ${data['updatedAt']}"),
+            Text("Số chương: ${data['chapterCount']}"),
+            Text("Tình Trạng Truyện: ${data['status']}"),
           ],
         ),
       ),

@@ -1,11 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firebase
 import '../main.dart';
-import '../widgets/story_card.dart'; // Gọi StoryCard từ nhà mới của nó vào đây
+import '../widgets/story_card.dart';
 import 'story_detail_screen.dart';
+import '../services/story_service.dart';
+import '../dev/developer_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    test();
+  }
+
+  Future<void> test() async {
+    final stories = await StoryService().getStories();
+    debugPrint('Stories count: ${stories.length}');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +44,17 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 20),
+        IconButton(
+          icon: const Icon(Icons.developer_mode),
+
+          onPressed: () {
+            Navigator.push(
+              context,
+
+              MaterialPageRoute(builder: (_) => const DeveloperScreen()),
+            );
+          },
+        ),
 
         // 2. MỤC NỔI BẬT (Tạm để nguyên tĩnh đã, m kết nối Firebase sau cũng được)
         Text(
