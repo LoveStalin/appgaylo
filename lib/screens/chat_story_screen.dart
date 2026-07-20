@@ -4,8 +4,9 @@ import '../models/chapter_model.dart';
 import '../models/messages_model.dart';
 import '../services/chapter_service.dart';
 import '../services/messages_service.dart';
+import '../widgets/chat_box.dart';
 import '../widgets/chat_bubble.dart';
-import '../widgets/typing_bubble.dart';
+import '../widgets/glass_bottom_bar.dart';
 
 class ChatStoryScreen extends StatefulWidget {
   final String storyId;
@@ -151,35 +152,16 @@ class _ChatStoryScreenState extends State<ChatStoryScreen> {
 
                     itemBuilder: (context, index) {
                       if (index < visibleMessageCount) {
-                        return ChatBubble(message: messages[index]);
+                        return ChatBox(message: messages[index]);
                       }
 
-                      return TypingBubble(
+                      return ChatBubble(
                         isRight: typingMessage?.senderType == "right",
                       );
                     },
                   ),
                 ),
-                IgnorePointer(
-                  ignoring: isTyping,
-                  child: GestureDetector(
-                    onTap: showNextMessage,
-                    child: Container(
-                      height: 70,
-                      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-
-                      decoration: BoxDecoration(
-                        color: Colors.white.withAlpha((0.15 * 255).round()),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: Colors.white.withAlpha((0.25 * 255).round()),
-                        ),
-                      ),
-
-                      child: Text(isTyping ? "..." : "Chạm để tiếp tục"),
-                    ),
-                  ),
-                ),
+                GlassBottomBar(onTap: showNextMessage),
               ],
             ),
     );
