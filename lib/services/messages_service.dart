@@ -30,10 +30,7 @@ class MessageService {
     String storyId,
     String chapterId,
   ) async {
-    final snapshot = await messageCollection(
-      storyId,
-      chapterId,
-    ).orderBy("createdAt").get();
+    final snapshot = await messageCollection(storyId, chapterId).get();
 
     return snapshot.docs.map((doc) {
       return MessageModel.fromMap(doc.data(), doc.id);

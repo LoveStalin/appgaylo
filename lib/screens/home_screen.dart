@@ -119,7 +119,10 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               itemCount: docs.length,
               itemBuilder: (context, index) {
-                final data = docs[index].data() as Map<String, dynamic>;
+                final data = {
+                  ...docs[index].data() as Map<String, dynamic>,
+                  "storyId": docs[index].id,
+                };
 
                 // Trả về cái StoryCard xịn xò m đã tạo trong thư mục widgets
                 return StoryCard(

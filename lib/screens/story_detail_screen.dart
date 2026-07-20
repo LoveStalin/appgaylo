@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import '../screens/chat_story_screen.dart';
 
 class StoryDetailScreen extends StatelessWidget {
   final Map<String, dynamic> data;
@@ -85,7 +86,17 @@ class StoryDetailScreen extends StatelessWidget {
 
             const SizedBox(height: 30),
 
-            ElevatedButton(onPressed: () {}, child: const Text("Đọc truyện")),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ChatStoryScreen(storyId: data["storyId"]),
+                  ),
+                );
+              },
+              child: const Text("Đọc truyện"),
+            ),
           ],
         ),
       ),
