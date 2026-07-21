@@ -23,65 +23,45 @@ class _ChatStoryScreenState extends State<ChatStoryScreen> {
   final ScrollController _scrollController = ScrollController();
 
   ChapterModel? currentChapter;
-
   List<MessageModel> messages = [];
   int visibleMessageCount = 1;
-
   bool isTyping = false;
-
   MessageModel? typingMessage;
-
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-
     loadFirstChapter();
   }
 
   Future<void> loadFirstChapter() async {
     final chapters = await _chapterService.getChapters(widget.storyId);
+    if (!mounted) return;
 
     if (chapters.isEmpty) {
-      setState(() {
-        isLoading = false;
-      });
-
+      setState(() => isLoading = false);
       return;
     }
 
     currentChapter = chapters.first;
-
     await loadMessages();
   }
 
   Future<void> loadMessages() async {
     if (currentChapter == null) return;
 
-    messages = await _messageService.getMessages(
+    final loadedMessages = await _messageService.getMessages(
       widget.storyId,
       currentChapter!.chapterId,
     );
-    visibleMessageCount = messages.isEmpty ? 0 : 1;
+    if (!mounted) return;
 
     setState(() {
+      messages = loadedMessages;
+      visibleMessageCount = loadedMessages.isEmpty ? 0 : 1;
       isLoading = false;
     });
-    final raw = await _messageService.getMessages(
-      widget.storyId,
-      currentChapter!.chapterId,
-    );
-
-    debugPrint("Message length = ${raw.length}");
-
-    for (var m in raw) {
-      debugPrint(
-        "sender=${m.sender} | text=${m.text} | senderType=${m.senderType}",
-      );
-    }
-
-    messages = raw;
   }
 
   void scrollToBottom() {
@@ -102,43 +82,32 @@ class _ChatStoryScreenState extends State<ChatStoryScreen> {
   }
 
   Future<void> showNextMessage() async {
-    // Đang typing thì không cho bấm tiếp
-    if (isTyping) return;
+    if (isTyping || visibleMessageCount >= messages.length) return;
 
-    // Nếu vẫn còn message
-    if (visibleMessageCount < messages.length) {
-      final nextMessage = messages[visibleMessageCount];
+    final nextMessage = messages[visibleMessageCount];
+    setState(() {
+      isTyping = true;
+      typingMessage = nextMessage;
+    });
+    scrollToBottom();
 
-      setState(() {
-        isTyping = true;
-        typingMessage = nextMessage;
-      });
+    await Future.delayed(const Duration(seconds: 2));
+    if (!mounted) return;
 
-      // Chờ 2 giây
-      await Future.delayed(const Duration(seconds: 2));
-
-      setState(() {
-        isTyping = false;
-
-        typingMessage = null;
-
-        visibleMessageCount++;
-      });
-
-      scrollToBottom();
-
-      return;
-    }
-
-    // TODO:
-    // Sang chapter mới
+    setState(() {
+      isTyping = false;
+      typingMessage = null;
+      visibleMessageCount++;
+    });
+    scrollToBottom();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(currentChapter?.title ?? "Đang tải...")),
-
+      appBar: AppBar(
+        title: Text(currentChapter?.title ?? '\u0110ang t\u1ea3i...'),
+      ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
@@ -147,21 +116,41 @@ class _ChatStoryScreenState extends State<ChatStoryScreen> {
                   child: ListView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.all(16),
-
                     itemCount: visibleMessageCount + (isTyping ? 1 : 0),
-
                     itemBuilder: (context, index) {
-                      if (index < visibleMessageCount) {
-                        return ChatBox(message: messages[index]);
-                      }
+                      final isVisibleMessage = index < visibleMessageCount;
+                      final message = isVisibleMessage
+                          ? messages[index]
+                          : typingMessage!;
 
-                      return ChatBubble(
-                        isRight: typingMessage?.senderType == "right",
+                      return AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 280),
+                        switchInCurve: Curves.easeOut,
+                        switchOutCurve: Curves.easeIn,
+                        transitionBuilder: (child, animation) => SizeTransition(
+                          sizeFactor: animation,
+                          axisAlignment: -1,
+                          child: FadeTransition(opacity: animation, child: child),
+                        ),
+                        child: isVisibleMessage
+                            ? ChatBox(
+                                key: ValueKey('message-${message.messageId}'),
+                                message: message,
+                              )
+                            : ChatBubble(
+                                key: ValueKey('typing-${message.messageId}'),
+                                isRight: message.senderType == 'right',
+                              ),
                       );
                     },
                   ),
                 ),
-                GlassBottomBar(onTap: showNextMessage),
+                GlassBottomBar(
+                  onTap: isTyping ? null : showNextMessage,
+                  text: isTyping
+                      ? '\u0110ang nh\u1eadp...'
+                      : 'Ch\u1ea1m \u0111\u1ec3 ti\u1ebfp t\u1ee5c',
+                ),
               ],
             ),
     );

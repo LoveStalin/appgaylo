@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firebase
 import '../main.dart';
 import '../widgets/story_card.dart';
 import 'story_detail_screen.dart';
-import '../services/story_service.dart';
 import '../dev/developer_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -13,17 +12,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  @override
-  void initState() {
-    super.initState();
-    test();
-  }
-
-  Future<void> test() async {
-    final stories = await StoryService().getStories();
-    debugPrint('Stories count: ${stories.length}');
-  }
-
   @override
   Widget build(BuildContext context) {
     return ListView(

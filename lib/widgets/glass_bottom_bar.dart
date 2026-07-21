@@ -2,7 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 class GlassBottomBar extends StatelessWidget {
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   final String text;
 
