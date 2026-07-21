@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firebase
-import '../main.dart';
+import '../l10n/localization.dart';
 import '../widgets/story_card.dart';
 import 'story_detail_screen.dart';
 import '../dev/developer_screen.dart';

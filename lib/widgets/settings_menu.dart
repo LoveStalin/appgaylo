@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../main.dart';
 import '../services/auth_service.dart';
 import '../screens/sign_in_screen.dart';
+import '../l10n/localization.dart';
 
 class SettingsMenu {
   static Future<void> show({

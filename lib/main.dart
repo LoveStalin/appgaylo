@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'l10n/localization.dart';
 import 'widgets/home_page.dart';
 import 'screens/sign_in_screen.dart';
 

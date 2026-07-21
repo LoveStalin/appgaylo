@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../main.dart';
+import '../l10n/localization.dart';
 import 'email_verification_screen.dart';
 import '../services/auth_service.dart'; // Import service đã tách
 

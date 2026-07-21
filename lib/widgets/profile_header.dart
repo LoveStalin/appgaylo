@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../screens/edit_profile_screen.dart';
-import '../main.dart';
+import '../l10n/localization.dart';
 
 class ProfileHeader extends StatefulWidget {
   final User user;
