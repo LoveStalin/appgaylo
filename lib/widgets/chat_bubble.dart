@@ -18,7 +18,7 @@ class _ChatBubbleState extends State<ChatBubble>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
+      duration: const Duration(milliseconds: 300), // Thời gian 1 vòng lặp của animation ... 
     )..repeat();
   }
 
@@ -64,7 +64,9 @@ class _ChatBubbleState extends State<ChatBubble>
                             width: 7,
                             height: 7,
                             decoration: BoxDecoration(
-                              color: widget.isRight ? Colors.white : Colors.black54,
+                              color: widget.isRight
+                                  ? Colors.white
+                                  : Colors.black54,
                               shape: BoxShape.circle,
                             ),
                           ),

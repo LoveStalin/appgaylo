@@ -91,7 +91,7 @@ class _ChatStoryScreenState extends State<ChatStoryScreen> {
     });
     scrollToBottom();
 
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(seconds: 1)); // Giả lập thời gian "đang nhập" của nhân vật
     if (!mounted) return;
 
     setState(() {
@@ -130,7 +130,10 @@ class _ChatStoryScreenState extends State<ChatStoryScreen> {
                         transitionBuilder: (child, animation) => SizeTransition(
                           sizeFactor: animation,
                           axisAlignment: -1,
-                          child: FadeTransition(opacity: animation, child: child),
+                          child: FadeTransition(
+                            opacity: animation,
+                            child: child,
+                          ),
                         ),
                         child: isVisibleMessage
                             ? ChatBox(

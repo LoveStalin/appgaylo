@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import '../screens/chat_story_screen.dart';
+import '../widgets/comments_section.dart';
 
 class StoryDetailScreen extends StatelessWidget {
   final Map<String, dynamic> data;
@@ -78,11 +79,13 @@ class StoryDetailScreen extends StatelessWidget {
 
             Text("Follower: ${data['followers']}"),
 
-            Text("Bình luận: ${data['comment']}"),
-
             Text("Trạng thái: ${data['status']}"),
 
             Text("Thể loại: ${data['genre']}"),
+
+            const SizedBox(height: 24),
+
+            CommentsSection(storyId: data['storyId'] as String? ?? ''),
 
             const SizedBox(height: 30),
 

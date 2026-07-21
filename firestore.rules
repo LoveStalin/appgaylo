@@ -2,7 +2,6 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // The story catalogue is readable before sign-in.
     match /stories/{storyId} {
       allow read: if true;
 
@@ -12,6 +11,10 @@ service cloud.firestore {
         match /messages/{messageId} {
           allow read: if true;
         }
+      }
+
+      match /comments/{commentId} {
+        allow read: if true;
       }
     }
   }
