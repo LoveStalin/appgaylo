@@ -18,7 +18,9 @@ class _ChatBubbleState extends State<ChatBubble>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300), // Thời gian 1 vòng lặp của animation ... 
+      duration: const Duration(
+        milliseconds: 300,
+      ), // Thời gian 1 vòng lặp của animation ...
     )..repeat();
   }
 
