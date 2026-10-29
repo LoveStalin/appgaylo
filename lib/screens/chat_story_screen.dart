@@ -129,7 +129,7 @@ class _ChatStoryScreenState extends State<ChatStoryScreen> {
                         switchOutCurve: Curves.easeIn,
                         transitionBuilder: (child, animation) => SizeTransition(
                           sizeFactor: animation,
-                          axisAlignment: -1,
+                          alignment: Alignment.topCenter,
                           child: FadeTransition(
                             opacity: animation,
                             child: child,
